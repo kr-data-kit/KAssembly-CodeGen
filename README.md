@@ -1,7 +1,7 @@
 # OpenAssembly-Binder
 국회 열린데이터광장 에서 제공하는 OpenAPI를 golang 코드로 바인딩해주는 도구입니다.
 
-[국회 열린데이터광장](https://open.assembly.go.kr/)에서 제공하는 OpenAPI를 golang 코드로 바인딩해주는 도구입니다.
+[국회 열린데이터광장](https://open.assembly.go.kr/portal/openapi/openApiNaListPage.do)에서 제공하는 OpenAPI를 golang 코드로 바인딩해주는 도구입니다.
 
 주요한 기능은 동작하지만 아직 미완성입니다.. ;-;
 여러가지 기능들과 바인딩 코드의 종류 (python, rust등) 를 향후 추가할 계획입니다!

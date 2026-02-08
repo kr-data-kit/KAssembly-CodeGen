@@ -7,7 +7,6 @@ version: '3'
 vars:
   MESSAGE: >
     This is a sample message from the openassemblybinder Taskfile. You can customize it as needed.
-  MAIN_FILE: ./cmd/
 
 tasks:
   default:
@@ -20,9 +19,10 @@ tasks:
   prepare:
     internal: true
     cmds:
+      - cmd: echo "Preparing directory {{.DIR}}"
       - cmd: mkdir -p "{{.DIR}}"
         platforms: [linux, darwin]
-      - cmd: 'cmd /c "if not exist "{{.DIR}}" mkdir "{{.DIR}}""'
+      - cmd: mkdir "{{fromSlash .DIR}}" 2>nul || (exit 0)
         platforms: [windows]
     silent: true
   
@@ -30,23 +30,26 @@ tasks:
     desc: "Build the openassemblybinder binary"
     vars:
       BINARY_FILE: '{{.BINARY_NAME | default "openassemblybinder"}}{{if eq OS "windows"}}.exe{{end}}'
-      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean}}'
-      MAIN_FILE: "{{joinPath .TASKFILE_DIR .MAIN_FILE | clean}}"
+      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean | toSlash}}'
+      MAIN_DIR: '{{joinPath .TASKFILE_DIR "cmd" | clean | toSlash}}'
     cmds:
       - task: prepare
         vars:
           DIR:
             ref: .BUILD_DIR
-      - cmd: go build -o "{{joinPath .BUILD_DIR .BINARY_FILE | clean}}" "{{.MAIN_FILE}}"
-        dir: 
-          ref: .TASKFILE_DIR
+      - cmd: >
+          go build 
+          -C "{{.TASKFILE_DIR}}" 
+          -o "{{.BUILD_DIR}}/{{.BINARY_FILE}}" 
+          .
+        dir: "{{.TASKFILE_DIR}}"
     silent: true
   
   list:
     desc: "List all api in openassembly API"
     vars:
       BINARY_FILE: '{{.BINARY_NAME | default "openassemblybinder"}}{{if eq OS "windows"}}.exe{{end}}'
-      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean}}'
+      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean | toSlash }}'
       BINARY_PATH: "{{joinPath .BUILD_DIR .BINARY_FILE | clean | toSlash}}"
     envs:
       - ASSEMBLY_API_KEY: 
@@ -60,10 +63,10 @@ tasks:
     desc: "Generate the OpenAssembly client code"
     vars:
       BINARY_FILE: '{{.BINARY_NAME | default "openassemblybinder"}}{{if eq OS "windows"}}.exe{{end}}'
-      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean}}'
+      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean | toSlash}}'
       BINARY_PATH: "{{joinPath .BUILD_DIR .BINARY_FILE | clean | toSlash}}"
 
-      TARGET_DIR: '{{.TARGET_DIR | default (joinPath .TASKFILE_DIR "./out")| clean}}'
+      TARGET_DIR: '{{.TARGET_DIR | default (joinPath .TASKFILE_DIR "./out")| clean | toSlash}}'
       PACKAGE_NAME: '{{.PACKAGE_NAME | default "openassemblyclient"}}'
     envs:
       - ASSEMBLY_API_KEY:
