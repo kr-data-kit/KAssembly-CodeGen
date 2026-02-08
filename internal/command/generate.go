@@ -3,8 +3,8 @@ package command
 import (
 	"context"
 	"fmt"
-	"openassemblybind/internal/generator"
-	"openassemblybind/internal/service"
+	"openassemblybinder/internal/generator"
+	"openassemblybinder/internal/service"
 	"os"
 )
 

@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"openassemblybind/internal/command"
+	"openassemblybinder/internal/command"
 	"os"
 
 	"github.com/joho/godotenv"

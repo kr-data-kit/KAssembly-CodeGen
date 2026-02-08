@@ -35,7 +35,7 @@ tasks:
     silent: true
 
   build:
-    desc: "Build the openassemblybind binary"
+    desc: "Build the openassemblybinder binary"
     cmds:
       - task: bindings:build
         vars:

@@ -1,4 +1,4 @@
-module openassemblybind
+module openassemblybinder
 
 go 1.25.5
 

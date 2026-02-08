@@ -2,7 +2,7 @@ package generator
 
 import (
 	"fmt"
-	"openassemblybind/internal/service"
+	"openassemblybinder/internal/service"
 	"path"
 	"strings"
 )

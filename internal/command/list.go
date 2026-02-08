@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
-	"openassemblybind/internal/service"
+	"openassemblybinder/internal/service"
 )
 
 func ListCommand(
