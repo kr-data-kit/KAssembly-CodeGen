@@ -1,0 +1,76 @@
+package {{.PackageName}}
+
+import "net/url"
+
+// ID : {{.Service.ID}}
+// {{.Service.Title}}
+// {{RemoveLF .Service.Description}}
+// URL : {{.Service.URL}}
+// CCL : {{.Service.CCL}}
+
+const (
+    {{.Service.ID}}ApiRes = "{{.Service.ResponseKey}}"
+)
+
+{{ range $alter := .Service.AlterStructNames -}}
+// {{KebabToPascalCase $alter}}Params is an alias for ID of original {{KebabToPascalCase $.Service.StructName}}Params
+type {{KebabToPascalCase $alter}}Params = {{KebabToPascalCase $.Service.StructName}}Params
+
+{{ end -}}
+{{- range $alter := .Service.AlterStructNames -}}
+// {{KebabToPascalCase $alter}} is an alias for ID of original {{KebabToPascalCase $.Service.StructName}}
+type {{KebabToPascalCase $alter}} = {{KebabToPascalCase $.Service.StructName}}
+
+{{ end -}}
+// {{KebabToPascalCase .Service.StructName}}Params is a parameter struct for {{.Service.Title}}.
+// API : {{RemoveLF .Service.Description}}
+type {{KebabToPascalCase .Service.StructName}}Params struct {
+    CommonParams
+    {{- range $var := .Service.Params }}
+    // {{ScreamSnakeToPascalCase $var.ID }} : {{$var.Name}} 
+    {{- if $var.RequiredRaw}} [Required] {{end}}
+    {{- if $var.Example}}
+    // (Reference : {{RemoveLF $var.Example}})
+    {{- end }}
+    {{ScreamSnakeToPascalCase $var.ID }} string `query:"{{ $var.ID }}"`
+    {{- end }}
+}
+
+// Encode encodes {{KebabToPascalCase .Service.StructName}}Params as URL query parameters.
+func (p *{{KebabToPascalCase .Service.StructName}}Params) Encode(params *url.Values) {
+    p.CommonParams.Encode(params)
+    {{- range $var := .Service.Params }}
+    if p.{{ScreamSnakeToPascalCase $var.ID }} != "" {
+        params.Add("{{ $var.ID }}", p.{{ScreamSnakeToPascalCase $var.ID }})
+    }
+    {{- end }}
+}
+
+// Fetch{{KebabToPascalCase .Service.StructName}} calls the {{.Service.Title}} API.
+func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}(params *{{KebabToPascalCase .Service.StructName}}Params) ([]{{KebabToPascalCase .Service.StructName}}, APIStatus, error) {
+    return fetchApi[{{KebabToPascalCase .Service.StructName}}](c, "{{.Service.ResponseKey}}", params)
+}
+
+// IsValid checks the validity of {{KebabToPascalCase .Service.StructName}}Params.
+func (p *{{KebabToPascalCase .Service.StructName}}Params) IsValid() bool {
+    {{- range $var := .Service.Params }}
+    {{- if $var.RequiredRaw}}
+    if p.{{ScreamSnakeToPascalCase $var.ID }} == "" {
+        return false
+    }
+    {{- end}}
+    {{- end }}
+    return true
+}
+
+// {{KebabToPascalCase .Service.StructName}} is a result struct for {{.Service.Title}}.
+// API : {{RemoveLF .Service.Description}}
+type {{KebabToPascalCase .Service.StructName}} struct {
+    {{- range $col := .Service.Cols }}
+    // {{ScreamSnakeToPascalCase $col.ID }} : {{$col.Name}} 
+    {{- if $col.Unit}}
+    // (Unit : {{ $col.Unit }})
+    {{- end }}
+    {{ScreamSnakeToPascalCase $col.ID }} string `json:"{{ $col.ID }}"`
+    {{- end }}
+}

@@ -1,0 +1,80 @@
+# https://taskfile.dev
+
+version: '3'
+
+dotenv:
+  - .env
+
+includes:
+  # If 'bindings' points to Taskfile-core.yml,
+  # it doesn't matter if the Taskfile is located in a different directory.
+  bindings: ./Taskfile-core.yml
+
+vars:
+  MESSAGE: >
+    This is a message from the main Taskfile.
+    Please customize vars in Taskfile as needed.
+  
+  # Variables for the build
+  BUILD_DIR: ./build
+  BINARY_NAME: bind
+
+  # Variables for the generate
+  PACKAGE_NAME: openassemblyclient
+  CLIENT_NAME: OpenAssemblyClient
+  TARGET_DIR: ./out
+  CREATE_DIR : true 
+
+tasks:
+  default:
+    cmds:
+      - task: bindings:default
+        vars:
+          OVERRIDE_MESSAGE:
+            ref: .MESSAGE
+    silent: true
+
+  build:
+    desc: "Build the openassemblybind binary"
+    cmds:
+      - task: bindings:build
+        vars:
+          BUILD_DIR:
+            ref: .BUILD_DIR
+          BINARY_NAME:
+            ref: .BINARY_NAME
+    silent: true
+  
+  list:
+    desc: "List all api in openassembly API"
+    deps:
+      - task: build
+    cmds:
+      - task: bindings:list
+        vars:
+          BUILD_DIR:
+            ref: .BUILD_DIR
+          BINARY_NAME:
+            ref: .BINARY_NAME
+          ASSEMBLY_API_KEY: 
+            ref: .ASSEMBLY_API_KEY
+    silent: true
+
+  generate:
+    desc: "Generate the OpenAssembly client code"
+    deps:
+      - task: build
+    cmds:
+      - task: bindings:generate
+        vars:
+          PACKAGE_NAME:
+            ref: .PACKAGE_NAME
+          CLIENT_NAME:
+            ref: .CLIENT_NAME
+          TARGET_DIR:
+            ref: .TARGET_DIR
+          ASSEMBLY_API_KEY: 
+            ref: .ASSEMBLY_API_KEY
+          CREATE_DIR:
+            ref: .CREATE_DIR
+    silent: true

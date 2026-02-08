@@ -1,0 +1,118 @@
+package {{.PackageName}}
+
+type APIStatus int
+
+const (
+	StatusOK                 APIStatus = iota // 정상 처리되었습니다
+	StatusNoData                              // 해당하는 데이터가 없습니다
+	StatusAuthRestricted                      // 관리자에 의해 인증키 사용이 제한되었습니다
+	StatusMissingRequired                     // 필수 값이 누락되어 있습니다
+	StatusInvalidAuth                         // 인증키가 유효하지 않습니다
+	StatusServiceNotFound                     // 해당하는 서비스를 찾을 수 없습니다
+	StatusInvalidLocation                     // 요청위치 값의 타입이 유효하지 않습니다
+	StatusDataLimitExceeded                   // 데이터요청은 한번에 최대 1,000건을 넘을 수 없습니다
+	StatusTrafficExceeded                     // 일별 트래픽 제한을 넘은 호출
+	StatusServerError                         // 서버 오류입니다
+	StatusDatabaseError                       // 데이터베이스 연결 오류입니다
+	StatusSQLError                            // SQL 문장 오류입니다
+	StatusCertificateRevoked                  // 인증서가 폐기되었습니다
+)
+
+func (s APIStatus) String() string {
+	switch s {
+	case StatusOK:
+		return "INFO-000"
+	case StatusNoData:
+		return "INFO-200"
+	case StatusAuthRestricted:
+		return "INFO-300"
+	case StatusMissingRequired:
+		return "ERROR-300"
+	case StatusInvalidAuth:
+		return "ERROR-290"
+	case StatusServiceNotFound:
+		return "ERROR-310"
+	case StatusInvalidLocation:
+		return "ERROR-333"
+	case StatusDataLimitExceeded:
+		return "ERROR-336"
+	case StatusTrafficExceeded:
+		return "ERROR-337"
+	case StatusServerError:
+		return "ERROR-500"
+	case StatusDatabaseError:
+		return "ERROR-600"
+	case StatusSQLError:
+		return "ERROR-601"
+	case StatusCertificateRevoked:
+		return "ERROR-990"
+	default:
+		return "UNKNOWN STATUS"
+	}
+}
+
+func GetStatus(code string) (APIStatus, bool) {
+	switch code {
+	case "INFO-000":
+		return StatusOK, true
+	case "INFO-200":
+		return StatusNoData, true
+	case "INFO-300":
+		return StatusAuthRestricted, true
+	case "ERROR-300":
+		return StatusMissingRequired, true
+	case "ERROR-290":
+		return StatusInvalidAuth, true
+	case "ERROR-310":
+		return StatusServiceNotFound, true
+	case "ERROR-333":
+		return StatusInvalidLocation, true
+	case "ERROR-336":
+		return StatusDataLimitExceeded, true
+	case "ERROR-337":
+		return StatusTrafficExceeded, true
+	case "ERROR-500":
+		return StatusServerError, true
+	case "ERROR-600":
+		return StatusDatabaseError, true
+	case "ERROR-601":
+		return StatusSQLError, true
+	case "ERROR-990":
+		return StatusCertificateRevoked, true
+	default:
+		return -1, false
+	}
+}
+
+func (s APIStatus) Description() string {
+	switch s {
+	case StatusOK:
+		return "정상 처리되었습니다."
+	case StatusNoData:
+		return "해당하는 데이터가 없습니다."
+	case StatusAuthRestricted:
+		return "관리자에 의해 인증키 사용이 제한되었습니다."
+	case StatusMissingRequired:
+		return "필수 값이 누락되어 있습니다. 요청인자를 참고 하십시오."
+	case StatusInvalidAuth:
+		return "인증키가 유효하지 않습니다. 인증키가 없는 경우, 홈페이지에서 인증키를 신청하십시오."
+	case StatusServiceNotFound:
+		return "해당하는 서비스를 찾을 수 없습니다. 요청인자 중 SERVICE를 확인하십시오."
+	case StatusInvalidLocation:
+		return "요청위치 값의 타입이 유효하지 않습니다.요청위치 값은 정수를 입력하세요."
+	case StatusDataLimitExceeded:
+		return "데이터요청은 한번에 최대 1,000건을 넘을 수 없습니다."
+	case StatusTrafficExceeded:
+		return "일별 트래픽 제한을 넘은 호출입니다. 오늘은 더이상 호출할 수 없습니다."
+	case StatusServerError:
+		return "서버 오류입니다. 지속적으로 발생시 홈페이지로 문의(Q&A) 바랍니다."
+	case StatusDatabaseError:
+		return "데이터베이스 연결 오류입니다. 지속적으로 발생시 홈페이지로 문의(Q&A) 바랍니다."
+	case StatusSQLError:
+		return "SQL 문장 오류 입니다. 지속적으로 발생시 홈페이지로 문의(Q&A) 바랍니다."
+	case StatusCertificateRevoked:
+		return "인증서가 폐기되었습니다.홈페이지에서 인증키를 확인하십시오."
+	default:
+		return "알 수 없는 상태 코드입니다."
+	}
+}

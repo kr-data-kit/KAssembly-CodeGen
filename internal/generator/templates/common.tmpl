@@ -1,0 +1,56 @@
+package {{.PackageName}}
+
+import (
+	"net/url"
+	"strconv"
+)
+
+type Format string
+
+const (
+	FormatJSON Format = "json"
+	FormatXML  Format = "xml"
+)
+
+type Paging struct {
+	Index int `query:"pIndex,omitempty"`
+	Size  int `query:"pSize,omitempty"`
+}
+
+type CommonParams struct {
+	Paging
+	Type Format `query:"Type,omitempty"`
+}
+
+func (c *CommonParams) Encode(params *url.Values) {
+	if c.Type != "" {
+		params.Add("Type", string(c.Type))
+	} else {
+		params.Add("Type", string(FormatJSON))
+	}
+	if c.Index != 0 {
+		params.Add("pIndex", strconv.Itoa(c.Index))
+	}
+	if c.Size != 0 {
+		params.Add("pSize", strconv.Itoa(c.Size))
+	}
+}
+
+type ApiParams interface {
+	Encode(params *url.Values)
+}
+
+type HeadItem struct {
+	ListTotalCount *int    `json:"list_total_count,omitempty" xml:"list_total_count,omitempty"`
+	Result         *Result `json:"RESULT,omitempty" xml:"RESULT,omitempty"`
+}
+
+type Result struct {
+	Code    string `json:"CODE" xml:"CODE"`
+	Message string `json:"MESSAGE" xml:"MESSAGE"`
+}
+
+type Item[T any] struct {
+	Head []HeadItem `json:"head,omitempty" xml:"head,omitempty"`
+	Row  []T        `json:"row,omitempty" xml:"row,omitempty"`
+}

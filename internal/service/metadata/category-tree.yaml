@@ -1,0 +1,138 @@
+version: 1
+nodes:
+  - key: MEMBERS
+    name_ko: "국회의원"
+    name_en: "members-of-the-national-assembly"
+    children:
+      - key: MEMBERS_STATUS
+        name_ko: "국회의원 현황 정보"
+        name_en: "member-status"
+        children:
+          - key: MEMBERS_STATUS_POLICY_REPORTS
+            name_ko: "정책자료보고서"
+            name_en: "policy-reports"
+            leaf: true
+
+      - key: ASSEMBLY_HISTORY
+        name_ko: "역대 국회 정보"
+        name_en: "past-assemblies"
+        leaf: true
+
+  - key: PUBLICATIONS
+    name_ko: "보고서ㆍ발간물"
+    name_en: "reports-and-publications"
+    children:
+      - key: PUBLICATIONS_LIBRARY
+        name_ko: "국회도서관"
+        name_en: "national-assembly-library"
+        leaf: true
+      - key: PUBLICATIONS_SECRETARIAT
+        name_ko: "국회사무처"
+        name_en: "national-assembly-secretariat"
+        leaf: true
+      - key: PUBLICATIONS_BUDGET_OFFICE
+        name_ko: "국회예산정책처"
+        name_en: "national-assembly-budget-office"
+        leaf: true
+      - key: PUBLICATIONS_RESEARCH_SERVICE
+        name_ko: "국회입법조사처"
+        name_en: "national-assembly-research-service"
+        leaf: true
+      - key: PUBLICATIONS_FUTURE_INSTITUTE
+        name_ko: "미래연구원"
+        name_en: "future-institute"
+        leaf: true
+
+  - key: ACTIVITIES_BY_TYPE
+    name_ko: "의정활동별 공개"
+    name_en: "activities-by-type"
+    children:
+      - key: ACTIVITIES_BILL_REVIEW
+        name_ko: "법률안 심사"
+        name_en: "bill-review"
+        leaf: true
+      - key: ACTIVITIES_COMMITTEE_INFO
+        name_ko: "위원회 정보"
+        name_en: "committee-info"
+        leaf: true
+      - key: ACTIVITIES_HEARING
+        name_ko: "인사청문회"
+        name_en: "personnel-hearing"
+        leaf: true
+
+  - key: DISCLOSURE_BY_TOPIC
+    name_ko: "주제별 공개"
+    name_en: "disclosure-by-topic"
+    children:
+      - key: CIVIC_PARTICIPATION
+        name_ko: "국민참여"
+        name_en: "civic-participation"
+        children:
+          - key: CIVIC_COMPLAINTS
+            name_ko: "국회 민원"
+            name_en: "national-assembly-complaints"
+            leaf: true
+          - key: INFORMATION_DISCLOSURE
+            name_ko: "정보공개제도"
+            name_en: "information-disclosure"
+            leaf: true
+      - key: MEDIA_AND_SCHEDULE
+        name_ko: "언론·미디어·국회일정"
+        name_en: "media-and-schedule"
+        leaf: true
+      - key: AGENDA
+        name_ko: "의사일정"
+        name_en: "agenda"
+        leaf: true
+      - key: PARLIAMENTARY_DIPLOMACY
+        name_ko: "의회외교"
+        name_en: "parliamentary-diplomacy"
+        children:
+          - key: OVERSEAS_ACTIVITIES
+            name_ko: "국회의원 직무상 국외활동"
+            name_en: "overseas-activities"
+            leaf: true
+      - key: FINANCE
+        name_ko: "재정"
+        name_en: "finance"
+        children:
+          - key: BUDGET_STATUS
+            name_ko: "국회 예산현황"
+            name_en: "budget-status"
+            leaf: true
+          - key: MEMBER_ALLOWANCES
+            name_ko: "국회의원 수당 및 지원예산"
+            name_en: "member-allowances"
+            leaf: true
+      - key: POLICY
+        name_ko: "정책"
+        name_en: "policy"
+        children:
+          - key: RESEARCH_GROUPS
+            name_ko: "국회의원 연구단체"
+            name_en: "research-groups"
+            leaf: true
+          - key: LEGISLATION_AND_POLICY
+            name_ko: "국회의원 입법 및 정책개발"
+            name_en: "legislation-and-policy"
+            leaf: true
+      - key: ADMINISTRATION
+        name_ko: "행정"
+        name_en: "administration"
+        children:
+          - key: AUDIT
+            name_ko: "감사"
+            name_en: "audit"
+            leaf: true
+          - key: PLANNING_COORDINATION
+            name_ko: "기획·조정"
+            name_en: "planning-coordination"
+            leaf: true
+          - key: LEGAL_AFFAIRS
+            name_ko: "법무"
+            name_en: "legal-affairs"
+            leaf: true
+          - key: PERSONNEL
+            name_ko: "인사"
+            name_en: "personnel"
+            leaf: true

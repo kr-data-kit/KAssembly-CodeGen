@@ -1,0 +1,79 @@
+# https://taskfile.dev
+
+# require .env file with ASSEMBLY_API_KEY.
+
+version: '3'
+
+vars:
+  MESSAGE: >
+    This is a sample message from the openassemblybind Taskfile. You can customize it as needed.
+  MAIN_FILE: ./cmd/
+
+tasks:
+  default:
+    vars:
+      MESSAGE: '{{ .OVERRIDE_MESSAGE | default .MESSAGE}}'
+    cmds:
+      - echo "{{.MESSAGE}}"
+    silent: true
+
+  prepare:
+    internal: true
+    cmds:
+      - cmd: mkdir -p "{{.DIR}}"
+        platforms: [linux, darwin]
+      - cmd: 'cmd /c "if not exist "{{.DIR}}" mkdir "{{.DIR}}""'
+        platforms: [windows]
+    silent: true
+  
+  build:
+    desc: "Build the openassemblybind binary"
+    vars:
+      BINARY_FILE: '{{.BINARY_NAME | default "openassemblybind"}}{{if eq OS "windows"}}.exe{{end}}'
+      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean}}'
+      MAIN_FILE: "{{joinPath .TASKFILE_DIR .MAIN_FILE | clean}}"
+    cmds:
+      - task: prepare
+        vars:
+          DIR:
+            ref: .BUILD_DIR
+      - cmd: go build -o "{{joinPath .BUILD_DIR .BINARY_FILE | clean}}" "{{.MAIN_FILE}}"
+        dir: 
+          ref: .TASKFILE_DIR
+    silent: true
+  
+  list:
+    desc: "List all api in openassembly API"
+    vars:
+      BINARY_FILE: '{{.BINARY_NAME | default "openassemblybind"}}{{if eq OS "windows"}}.exe{{end}}'
+      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean}}'
+      BINARY_PATH: "{{joinPath .BUILD_DIR .BINARY_FILE | clean | toSlash}}"
+    envs:
+      - ASSEMBLY_API_KEY: 
+          ref: .ASSEMBLY_API_KEY
+    cmds:
+      - cmd: echo "Listing APIs using binary at {{.BINARY_PATH}}"
+      - cmd: "{{.BINARY_PATH}} list"
+    silent: true
+
+  generate:
+    desc: "Generate the OpenAssembly client code"
+    vars:
+      BINARY_FILE: '{{.BINARY_NAME | default "openassemblybind"}}{{if eq OS "windows"}}.exe{{end}}'
+      BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean}}'
+      BINARY_PATH: "{{joinPath .BUILD_DIR .BINARY_FILE | clean | toSlash}}"
+
+      TARGET_DIR: '{{.TARGET_DIR | default (joinPath .TASKFILE_DIR "./out")| clean}}'
+      PACKAGE_NAME: '{{.PACKAGE_NAME | default "openassemblyclient"}}'
+    envs:
+      - ASSEMBLY_API_KEY:
+          ref: .ASSEMBLY_API_KEY
+    cmds:
+      - cmd: echo "Generating client code using binary at {{.BINARY_PATH}}"
+      - cmd: > 
+          {{.BINARY_PATH}} generate 
+          --package {{.PACKAGE_NAME}} 
+          --client {{.CLIENT_NAME}} 
+          --output {{.TARGET_DIR}} 
+          {{if eq .CREATE_DIR true}}--create-dir{{end}}
+    silent: true

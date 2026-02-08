@@ -1,0 +1,107 @@
+package {{.PackageName}}
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+)
+
+const (
+	OpenAssemblyBaseURL = "https://open.assembly.go.kr/portal/openapi/"
+)
+
+type {{.ClientName}} struct {
+	Key  string
+	Http *http.Client
+}
+
+func New{{.ClientName}}(key string) *{{.ClientName}} {
+    return &{{.ClientName}}{
+        Key:  key,
+        Http: &http.Client{},
+    }
+}
+
+func fetchApi[T any](c *{{.ClientName}}, endpoint string, params ApiParams) ([]T, APIStatus, error) {
+    url := c.buildURL(endpoint, params)
+    body, err := c.fetchHTTP(url)
+    if err != nil {
+        return nil, -1, err
+    }
+
+    var raw map[string]json.RawMessage
+    if err := json.Unmarshal(body, &raw); err != nil {
+        return nil, -1, fmt.Errorf("failed to parse response: %w", err)
+    }
+
+    if resultData, ok := raw["RESULT"]; ok {
+        var result Result
+        if err := json.Unmarshal(resultData, &result); err != nil {
+            return nil, -1, fmt.Errorf("failed to parse RESULT: %w", err)
+        }
+        if result.Code == "INFO-200" {
+            return []T{}, StatusNoData, nil
+        }
+        status, ok := GetStatus(result.Code)
+        if !ok {
+            return nil, -1, fmt.Errorf("unknown API status code: %s", result.Code)
+        }
+
+        return nil, status, fmt.Errorf("API error: %s - %s", result.Code, result.Message)
+    }
+
+    data, ok := raw[endpoint]
+    if !ok {
+        return nil, -1, fmt.Errorf("unexpected response structure")
+    }
+
+    var item []Item[T]
+    if err := json.Unmarshal(data, &item); err != nil {
+        return nil, -1, fmt.Errorf("failed to parse data: %w", err)
+    }
+    if len(item) < 2 {
+        return nil, -1, fmt.Errorf("insufficient data in response")
+    }
+    // FUTURE : 여기서 item[0]은 메타데이터, item[1]이 실제 데이터임을 보장해야 함
+    return item[1].Row, StatusOK, nil
+}
+    
+
+func (c *{{.ClientName}}) buildURL(endpoint string, paramStruct ApiParams) string {
+	params := url.Values{}
+	params.Add("KEY", c.Key)
+	paramStruct.Encode(&params)
+	return OpenAssemblyBaseURL + endpoint + "?" + params.Encode()
+}
+
+func (c *{{.ClientName}}) setCommonHeaders(req *http.Request) {
+    {{- range $key, $value := .Header }}
+    req.Header.Set("{{ $key }}", "{{ $value }}")
+    {{- end }}
+}
+
+func (c *{{.ClientName}}) fetchHTTP(url string) ([]byte, error) {
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+        return nil, err
+    }
+    c.setCommonHeaders(req)
+
+    resp, err := c.Http.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return nil, fmt.Errorf("HTTP request failed with status: %s", resp.Status)
+    }
+
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return nil, err
+    }
+    return body, nil
+}
