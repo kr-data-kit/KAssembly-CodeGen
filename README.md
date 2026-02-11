@@ -8,7 +8,15 @@
 
 ## 사용 방법
 
+필요한 것
+golang 설치 (1.25.5 이상)
+Task 설치 [설치 방법](https://taskfile.dev/docs/installation#go-modules)
+
 Taskfile 참조 (설명 추가 예정)
+
+task list
+
+task generate
 
 ---
 ### 출처 및 저작권 표시 (Data Source Attribution)
