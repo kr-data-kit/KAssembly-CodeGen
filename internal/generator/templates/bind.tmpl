@@ -1,6 +1,9 @@
 package {{.PackageName}}
 
-import "net/url"
+import (
+	"context"
+	"net/url"
+)
 
 // ID : {{.Service.ID}}
 // {{.Service.Title}}
@@ -47,8 +50,8 @@ func (p *{{KebabToPascalCase .Service.StructName}}Params) Encode(params *url.Val
 }
 
 // Fetch{{KebabToPascalCase .Service.StructName}} calls the {{.Service.Title}} API.
-func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}(params *{{KebabToPascalCase .Service.StructName}}Params) ([]{{KebabToPascalCase .Service.StructName}}, APIStatus, error) {
-    return fetchApi[{{KebabToPascalCase .Service.StructName}}](c, "{{.Service.ResponseKey}}", params)
+func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}(ctx context.Context, params *{{KebabToPascalCase .Service.StructName}}Params) ([]{{KebabToPascalCase .Service.StructName}}, APIStatus, error) {
+    return fetchApi[{{KebabToPascalCase .Service.StructName}}](ctx, c, "{{.Service.ResponseKey}}", params)
 }
 
 // IsValid checks the validity of {{KebabToPascalCase .Service.StructName}}Params.
