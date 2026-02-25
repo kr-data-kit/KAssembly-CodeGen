@@ -1,4 +1,7 @@
 - 탬플릿에서 ast로 변환하기
 
 # Future
-- 데이터가 제공되는 api를 임시 db에 가져와서 변환시키기
+- key를 쓰지 않고 사용가능하게 바꾸기
+- bulk update
+- 패키지 이름 바꾸기 (codegen)
+- go.mod 추가 여부 설정
