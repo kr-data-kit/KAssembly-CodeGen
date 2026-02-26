@@ -4,89 +4,101 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
-	"strconv"
+	"strings"
 )
 
-type OpenSrvApiResponse struct {
-	OPENSRVAPI []OpenSrvApiItem `json:"OPENSRVAPI"`
-	RESULT     *Result          `json:"RESULT,omitempty"`
-}
-
-type OpenSrvApiItem struct {
-	Head []HeadItem       `json:"head,omitempty"`
-	Row  []ServiceSummary `json:"row,omitempty"`
-}
-
-type HeadItem struct {
-	ListTotalCount *int    `json:"list_total_count,omitempty"`
-	Result         *Result `json:"RESULT,omitempty"`
-}
-
-type Result struct {
-	Code    string `json:"CODE"`
-	Message string `json:"MESSAGE"`
-}
-
-type ServiceSummary struct {
-	ID           string `json:"INF_ID"`    // 공공데이터ID
-	Title        string `json:"INF_NM"`    // 공공데이터명
-	Description  string `json:"INF_EXP"`   // 공공데이터설명
-	Category     string `json:"CATE_NM"`   // 분류체계
-	OpenDate     string `json:"OPEN_DTTM"` // 공개일자 (YYYY-MM-DD)
-	Organization string `json:"ORG_NM"`    // 제공기관
-	LastModified string `json:"LOAD_DTTM"` // 최종수정일자 (YYYY-MM-DD)
-	Source       string `json:"SRC_EXP"`   // 원본시스템
-	DocURL       string `json:"DDC_URL"`   // 명세서URL
-	ServiceURL   string `json:"SRV_URL"`   // 서비스URL
-	License      string `json:"CCL_NM"`    // 이용허락조건
-	UpdateCycle  string `json:"LOAD_NM"`   // 공개주기
-	UpdatePeriod string `json:"LOAD_CONT"` // 공개시기
-}
-
-func buildSummaryURL(apiKey string, pageIndex int, pageSize int) string {
-	params := url.Values{}
-	params.Add("KEY", apiKey)
-	params.Add("Type", "json")
-	params.Add("pIndex", strconv.Itoa(pageIndex))
-	params.Add("pSize", strconv.Itoa(pageSize))
-	return opensrvapiUrl + "?" + params.Encode()
-}
-
 const (
-	opensrvapiUrl   = "https://open.assembly.go.kr/portal/openapi/OPENSRVAPI"
 	defaultPageSize = 500
 )
 
-func FetchServiceSummaries(ctx context.Context, apiKey string) ([]ServiceSummary, error) {
-	allSummaries := []ServiceSummary{}
+type SummaryResponse struct {
+	Total   int       `json:"total"`
+	Pages   int       `json:"pages"`
+	APIList []Summary `json:"data"`
+	Count   int       `json:"count"`
+	Page    int       `json:"page"`
+	Rows    int       `json:"rows"`
+}
 
-	for pageIndex := 1; ; pageIndex++ {
-		url := buildSummaryURL(apiKey, pageIndex, defaultPageSize)
-		body, err := fetchHTTP(ctx, url)
+type Summary struct {
+	No               int    `json:"ROW_NUM"`   // 공공데이터 순서
+	Tag              string `json:"opentyTag"` // 공개유형
+	ID               string `json:"infaId"`    // 공공데이터ID
+	Title            string `json:"infaNm"`    // 공공데이터명
+	CategoryID       string `json:"cateId"`    // 분류체계ID
+	CategoryName     string `json:"cateNm"`    // 분류체계명
+	OrganizationCode string `json:"orgCd"`     // 제공기관코드
+	OrganizationName string `json:"orgNm"`     // 제공기관명
+	Description      string `json:"infaExp"`   // 공공데이터설명
+	OpenDate         string `json:"openYmd"`   // 공개일자 (YYYY-MM-DD)
+	ServiceTypesRaw  string `json:"openSrv"`   // 서비스유형 (<유형 코드>-<순서>,... 형태의 문자열)
+
+	InfID string // 상세정보 조회에 필요한 ID
+	CCL   string // 저작권 정보
+	DocURL string // 상세정보 페이지 URL
+}
+
+const (
+	SummaryURL = "https://open.assembly.go.kr/portal/infs/list/selectInfsListPaging.do"
+)
+
+// TODO : Summary에 데이터 표를 제공하는지도 포함시킬 수 있음
+// 서비스 유형을 bool 필드로 분리해서 ServiceSummary에 포함시키는 것도 고려해볼 수 있음
+
+func FetchSummary(ctx context.Context) ([]Summary, error) {
+	check, err := getSummaryResponse(ctx, 1, defaultPageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	if check.Total <= defaultPageSize {
+		return check.APIList, nil
+	}
+
+	var allItems []Summary
+	allItems = append(allItems, check.APIList...)
+
+	for page := 2; page <= check.Pages; page++ {
+		pageResult, err := getSummaryResponse(ctx, page, defaultPageSize)
 		if err != nil {
 			return nil, err
 		}
-		var resp OpenSrvApiResponse
-		if err := json.Unmarshal(body, &resp); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-		}
-		if resp.RESULT != nil {
-			result := *resp.RESULT
-			if result.Code == "INFO-200" {
-				break
-			}
-			return nil, fmt.Errorf("API error: %s - %s", result.Code, result.Message)
-		}
-		if len(resp.OPENSRVAPI) < 2 || len(resp.OPENSRVAPI[0].Head) < 2 {
-			return nil, fmt.Errorf("invalid response structure")
-		}
-		summaries := resp.OPENSRVAPI[1].Row
-		if len(summaries) == 0 {
-			break
-		}
-		allSummaries = append(allSummaries, summaries...)
+		allItems = append(allItems, pageResult.APIList...)
+	}
+	return allItems, nil
+}
+
+func getSummaryResponse(ctx context.Context, page int, rows int) (*SummaryResponse, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
 	}
 
-	return allSummaries, nil
+	bodyData := url.Values{}
+	bodyData.Set("page", fmt.Sprintf("%d", page))
+	bodyData.Set("rows", fmt.Sprintf("%d", rows))
+
+	req, err := http.NewRequestWithContext(ctx, "POST", SummaryURL, strings.NewReader(bodyData.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	setCommonHeaders(req)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to perform HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP status code error: %d", resp.StatusCode)
+	}
+
+	var apiResp SummaryResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+
+	return &apiResp, nil
 }

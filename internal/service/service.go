@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// For Binding
 type Service struct {
 	ID          string
 	Title       string
@@ -25,52 +26,42 @@ type Service struct {
 	AttributionRequired  bool
 }
 
-type CreateServiceOptions struct {
-	CreateServiceEn bool
-}
-
 func CreateService(
 	ctx context.Context,
-	summary ServiceSummary,
-	options ...CreateServiceOptions,
+	item Summary,
 ) (*Service, error) {
-	spec, err := FetchServiceSpec(ctx, summary.DocURL)
+	service := &Service{
+		ID:          item.ID,
+		Title:       item.Title,
+		Description: item.Description,
+	}
+
+	ccl, infSeq, err := fetchCCLAndInfSeq(ctx, item.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	service.URL = fmt.Sprintf(
+		"https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s",
+		item.ID,
+	)
+
+	spec, err := FetchServiceSpec(ctx, item.ID, infSeq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch service spec: %w", err)
 	}
-
-	service := &Service{
-		ID:          summary.ID,
-		Title:       summary.Title,
-		Description: summary.Description,
-		URL:         summary.ServiceURL,
-
-		StructName: getStructName(spec.ResponseKey),
-		AlterStructNames: []string{
-			summary.ID,
-
-			// TODO: add more alternatives if needed
-		},
-
-		Endpoint:    spec.Endpoint,
-		ResponseKey: spec.ResponseKey,
-		Params:      spec.Variables,
-		Cols:        spec.Columns,
-
-		CCL:                  summary.License,
-		CommercialUseAllowed: getCommercialUseAllowed(summary.License),
-		AttributionRequired:  getAttributionRequired(summary.License),
+	service.StructName = getStructName(spec.ResponseKey)
+	service.AlterStructNames = []string{
+		item.ID,
 	}
+	service.Endpoint = spec.Endpoint
+	service.ResponseKey = spec.ResponseKey
+	service.Params = spec.Variables
+	service.Cols = spec.Columns
 
-	if len(options) > 0 {
-		option := options[0]
-		if option.CreateServiceEn {
-			serviceNameEn := GetServiceNameEn(service.ID)
-			if serviceNameEn != "" {
-				service.AlterStructNames = append(service.AlterStructNames, serviceNameEn)
-			}
-		}
-	}
+	service.CCL = ccl
+	service.CommercialUseAllowed = getCommercialUseAllowed(ccl)
+	service.AttributionRequired = getAttributionRequired(ccl)
 
 	return service, nil
 }

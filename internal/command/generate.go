@@ -6,6 +6,7 @@ import (
 	"openassemblybinder/internal/generator"
 	"openassemblybinder/internal/service"
 	"os"
+	"strings"
 )
 
 func GenerateCommand(
@@ -57,22 +58,22 @@ func GenerateCommand(
 
 	// TODO: add ctx config
 	ctx := context.Background()
-	summaries, err := service.FetchServiceSummaries(
-		ctx,
-		key,
-	)
+
+	summaries, err := service.FetchSummary(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch service summaries: %v", err)
 	}
 
 	for _, summary := range summaries {
+		// TODO : hardcoded "A" for API service type, make it configurable or more robust if needed
+		fmt.Println(summary.ServiceTypesRaw)
+		if !strings.Contains(summary.ServiceTypesRaw, "A") {
+			continue
+		}
+
 		svc, err := service.CreateService(
 			ctx,
 			summary,
-			service.CreateServiceOptions{
-				// TODO : make this configurable
-				CreateServiceEn: true,
-			},
 		)
 		if err != nil {
 			return fmt.Errorf("failed to create service for %s(%s): %v", summary.ID, summary.Title, err)
