@@ -34,10 +34,6 @@ type Summary struct {
 	Description      string `json:"infaExp"`   // 공공데이터설명
 	OpenDate         string `json:"openYmd"`   // 공개일자 (YYYY-MM-DD)
 	ServiceTypesRaw  string `json:"openSrv"`   // 서비스유형 (<유형 코드>-<순서>,... 형태의 문자열)
-
-	InfID string // 상세정보 조회에 필요한 ID
-	CCL   string // 저작권 정보
-	DocURL string // 상세정보 페이지 URL
 }
 
 const (
@@ -48,7 +44,7 @@ const (
 // 서비스 유형을 bool 필드로 분리해서 ServiceSummary에 포함시키는 것도 고려해볼 수 있음
 
 func FetchSummary(ctx context.Context) ([]Summary, error) {
-	check, err := getSummaryResponse(ctx, 1, defaultPageSize)
+	check, err := fetchSummaryResponse(ctx, 1, defaultPageSize)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +57,7 @@ func FetchSummary(ctx context.Context) ([]Summary, error) {
 	allItems = append(allItems, check.APIList...)
 
 	for page := 2; page <= check.Pages; page++ {
-		pageResult, err := getSummaryResponse(ctx, page, defaultPageSize)
+		pageResult, err := fetchSummaryResponse(ctx, page, defaultPageSize)
 		if err != nil {
 			return nil, err
 		}
@@ -70,7 +66,7 @@ func FetchSummary(ctx context.Context) ([]Summary, error) {
 	return allItems, nil
 }
 
-func getSummaryResponse(ctx context.Context, page int, rows int) (*SummaryResponse, error) {
+func fetchSummaryResponse(ctx context.Context, page int, rows int) (*SummaryResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}

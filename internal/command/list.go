@@ -7,7 +7,6 @@ import (
 )
 
 func ListCommand(
-	key string,
 	method string,
 ) error {
 	// TODO: add ctx config
@@ -32,6 +31,6 @@ func listSimple(
 	ctx context.Context,
 	data []service.Summary,
 ) error {
-	// TODO : add print
+	// TODO : add list
 	return nil
 }

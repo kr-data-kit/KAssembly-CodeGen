@@ -5,23 +5,14 @@ import (
 	"fmt"
 	"openassemblybinder/internal/command"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	fmt.Println("Test")
+	fmt.Println("Open Assembly Client Code Generator v0.1.0")
 	if len(os.Args) < 2 {
 		fmt.Println("Invalid arguments.") // TODO: add help message
 		return
 	}
-
-	// always load .env to get ASSEMBLY_API_KEY
-	// TODO: .env path config
-	if !checkKey(".env") {
-		panic("ASSEMBLY_API_KEY environment variable is not set")
-	}
-	key := os.Getenv("ASSEMBLY_API_KEY")
 
 	subCommand := os.Args[1]
 
@@ -30,7 +21,8 @@ func main() {
 		listCmd := flag.NewFlagSet("list", flag.ContinueOnError)
 		method := listCmd.String("method", "simple", "Method to list services: simple or detailed")
 		listCmd.Parse(os.Args[2:])
-		err := command.ListCommand(key, *method)
+		fmt.Println("This feature is still under development")
+		err := command.ListCommand(*method)
 		if err != nil {
 			panic(err)
 		}
@@ -44,7 +36,6 @@ func main() {
 
 		genCmd.Parse(os.Args[2:])
 		err := command.GenerateCommand(
-			key,
 			*PackageName,
 			*ClientName,
 			*OutputPath,
@@ -58,20 +49,4 @@ func main() {
 		fmt.Println("Unknown command:", subCommand)
 		return
 	}
-}
-
-func checkKey(
-	godotenvPath string,
-) bool {
-	if os.Getenv("ASSEMBLY_API_KEY") != "" {
-		return true
-	}
-	err := godotenv.Load(godotenvPath)
-	if err != nil {
-		return false
-	}
-	if os.Getenv("ASSEMBLY_API_KEY") != "" {
-		return true
-	}
-	return false
 }

@@ -6,11 +6,9 @@ import (
 	"openassemblybinder/internal/generator"
 	"openassemblybinder/internal/service"
 	"os"
-	"strings"
 )
 
 func GenerateCommand(
-	key string,
 	packageName string,
 	clientName string,
 	outputPath string,
@@ -59,25 +57,16 @@ func GenerateCommand(
 	// TODO: add ctx config
 	ctx := context.Background()
 
-	summaries, err := service.FetchSummary(ctx)
+	services, err := service.GenerateServices(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to fetch service summaries: %v", err)
+		return fmt.Errorf("failed to generate services: %v", err)
 	}
 
-	for _, summary := range summaries {
-		// TODO : hardcoded "A" for API service type, make it configurable or more robust if needed
-		fmt.Println(summary.ServiceTypesRaw)
-		if !strings.Contains(summary.ServiceTypesRaw, "A") {
-			continue
+	for result := range services {
+		if result.Error != nil {
+			fmt.Printf("Error generating service: %v\n", result.Error)
 		}
-
-		svc, err := service.CreateService(
-			ctx,
-			summary,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to create service for %s(%s): %v", summary.ID, summary.Title, err)
-		}
+		svc := result.Service
 		bindData := generator.BindTemplateData{
 			GlobalTemplateData: globalData,
 			Service:            svc,
@@ -85,7 +74,7 @@ func GenerateCommand(
 
 		err = generator.ExecuteBindTemplate(outputPath, bindData)
 		if err != nil {
-			return fmt.Errorf("failed to execute bind template for %s: %v", svc.StructName, err)
+			fmt.Printf("Error executing bind template for service %s: %v\n", svc.StructName, err)
 		}
 	}
 

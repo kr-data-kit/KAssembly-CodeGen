@@ -109,7 +109,6 @@ func FetchServiceSpecByURL(ctx context.Context, DocURL string) (*ServiceSpec, er
 
 func FetchServiceSpec(ctx context.Context, infId string, infSeq string) (*ServiceSpec, error) {
 	url := fmt.Sprintf("%s?infId=%s&infSeq=%s", specUrl, url.QueryEscape(infId), url.QueryEscape(infSeq))
-	fmt.Println(url)
 	body, err := fetchHTTP(ctx, url, nil)
 	if err != nil {
 		return nil, err
