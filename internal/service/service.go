@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 )
 
+// For Binding
 type Service struct {
 	ID          string
 	Title       string
@@ -23,56 +25,6 @@ type Service struct {
 	CCL                  string
 	CommercialUseAllowed bool
 	AttributionRequired  bool
-}
-
-type CreateServiceOptions struct {
-	CreateServiceEn bool
-}
-
-func CreateService(
-	ctx context.Context,
-	summary ServiceSummary,
-	options ...CreateServiceOptions,
-) (*Service, error) {
-	spec, err := FetchServiceSpec(ctx, summary.DocURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch service spec: %w", err)
-	}
-
-	service := &Service{
-		ID:          summary.ID,
-		Title:       summary.Title,
-		Description: summary.Description,
-		URL:         summary.ServiceURL,
-
-		StructName: getStructName(spec.ResponseKey),
-		AlterStructNames: []string{
-			summary.ID,
-
-			// TODO: add more alternatives if needed
-		},
-
-		Endpoint:    spec.Endpoint,
-		ResponseKey: spec.ResponseKey,
-		Params:      spec.Variables,
-		Cols:        spec.Columns,
-
-		CCL:                  summary.License,
-		CommercialUseAllowed: getCommercialUseAllowed(summary.License),
-		AttributionRequired:  getAttributionRequired(summary.License),
-	}
-
-	if len(options) > 0 {
-		option := options[0]
-		if option.CreateServiceEn {
-			serviceNameEn := GetServiceNameEn(service.ID)
-			if serviceNameEn != "" {
-				service.AlterStructNames = append(service.AlterStructNames, serviceNameEn)
-			}
-		}
-	}
-
-	return service, nil
 }
 
 func getStructName(ResponseKey string) string {
@@ -98,4 +50,92 @@ func checkRandomName(name string) bool {
 		}
 	}
 	return true
+}
+
+type ServiceResult struct {
+	Service *Service
+	Error   error
+}
+
+func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
+	returnChan := make(chan *ServiceResult)
+
+	summaries, err := FetchSummary(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch summaries: %w", err)
+	}
+	go func() {
+		defer close(returnChan)
+
+		for _, item := range summaries {
+			// Check if context is cancelled
+			if ctx.Err() != nil {
+				returnChan <- &ServiceResult{
+					Service: nil,
+					Error:   fmt.Errorf("service generation cancelled: %w", ctx.Err()),
+				}
+				return
+			}
+
+			if !strings.ContainsRune(item.ServiceTypesRaw, 'A') {
+				continue
+			}
+
+			query, err := FetchQueryData(ctx, item.ID)
+			if err != nil {
+				returnChan <- &ServiceResult{
+					Service: nil,
+					Error:   fmt.Errorf("failed to fetch query data for %s: %w", item.ID, err),
+				}
+				continue
+			}
+
+			spec, err := FetchServiceSpec(ctx, item.ID, query.InfSeq)
+			if err != nil {
+				returnChan <- &ServiceResult{
+					Service: nil,
+					Error:   fmt.Errorf("failed to fetch service spec for %s: %w", item.ID, err),
+				}
+				continue
+			}
+
+			service := &Service{
+				ID:          item.ID,
+				Title:       item.Title,
+				Description: item.Description,
+				URL:         fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", item.ID),
+
+				StructName: getStructName(spec.ResponseKey),
+				AlterStructNames: []string{
+					item.ID,
+				},
+
+				Endpoint:    spec.Endpoint,
+				ResponseKey: spec.ResponseKey,
+
+				Params: spec.Variables,
+				Cols:   spec.Columns,
+
+				CCL:                  query.CCL,
+				CommercialUseAllowed: getCommercialUseAllowed(query.CCL),
+				AttributionRequired:  getAttributionRequired(query.CCL),
+			}
+
+			returnChan <- &ServiceResult{
+				Service: service,
+				Error:   nil,
+			}
+
+			extra, err := CheckExtra(ctx, service)
+			if extra != nil {
+				returnChan <- &ServiceResult{
+					Service: extra,
+					Error:   err,
+				}
+			}
+		}
+
+	}()
+
+	return returnChan, nil
 }

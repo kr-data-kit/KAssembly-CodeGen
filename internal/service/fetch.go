@@ -7,15 +7,19 @@ import (
 	"net/http"
 )
 
-func fetchHTTP(ctx context.Context, url string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+func setCommonHeaders(req *http.Request) {
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Host", "open.assembly.go.kr")
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+}
+
+func fetchHTTP(ctx context.Context, url string, body io.Reader) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Host", "open.assembly.go.kr")
-	req.Header.Set("User-Agent", "Mozilla/5.0")
+	setCommonHeaders(req)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -27,10 +31,10 @@ func fetchHTTP(ctx context.Context, url string) ([]byte, error) {
 		return nil, fmt.Errorf("HTTP status code error: %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response: %w", err)
 	}
 
-	return body, nil
+	return respBody, nil
 }

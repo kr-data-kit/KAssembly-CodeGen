@@ -2,9 +2,6 @@
 
 version: '3'
 
-dotenv:
-  - .env
-
 includes:
   # If 'bindings' points to Taskfile-core.yml,
   # it doesn't matter if the Taskfile is located in a different directory.
@@ -56,8 +53,6 @@ tasks:
             ref: .BUILD_DIR
           BINARY_NAME:
             ref: .BINARY_NAME
-          ASSEMBLY_API_KEY: 
-            ref: .ASSEMBLY_API_KEY
     silent: true
 
   generate:
@@ -73,8 +68,6 @@ tasks:
             ref: .CLIENT_NAME
           TARGET_DIR:
             ref: .TARGET_DIR
-          ASSEMBLY_API_KEY: 
-            ref: .ASSEMBLY_API_KEY
           CREATE_DIR:
             ref: .CREATE_DIR
     silent: true

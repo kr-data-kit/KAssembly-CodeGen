@@ -9,7 +9,6 @@ import (
 )
 
 func GenerateCommand(
-	key string,
 	packageName string,
 	clientName string,
 	outputPath string,
@@ -56,37 +55,41 @@ func GenerateCommand(
 	}
 
 	// TODO: add ctx config
-	ctx := context.Background()
-	summaries, err := service.FetchServiceSummaries(
-		ctx,
-		key,
-	)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	services, err := service.GenerateServices(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to fetch service summaries: %v", err)
+		return fmt.Errorf("failed to generate services: %v", err)
 	}
 
-	for _, summary := range summaries {
-		svc, err := service.CreateService(
-			ctx,
-			summary,
-			service.CreateServiceOptions{
-				// TODO : make this configurable
-				CreateServiceEn: true,
-			},
-		)
-		if err != nil {
-			return fmt.Errorf("failed to create service for %s(%s): %v", summary.ID, summary.Title, err)
-		}
-		bindData := generator.BindTemplateData{
-			GlobalTemplateData: globalData,
-			Service:            svc,
-		}
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("code generation cancelled: %v", ctx.Err())
+		case result, ok := <-services:
+			if !ok {
+				// channel closed, all services processed
+				goto done
+			}
+			if result.Error != nil {
+				fmt.Printf("Error generating service: %v\n", result.Error)
+				continue
+			}
+			svc := result.Service
+			bindData := generator.BindTemplateData{
+				GlobalTemplateData: globalData,
+				Service:            svc,
+			}
 
-		err = generator.ExecuteBindTemplate(outputPath, bindData)
-		if err != nil {
-			return fmt.Errorf("failed to execute bind template for %s: %v", svc.StructName, err)
+			err = generator.ExecuteBindTemplate(outputPath, bindData)
+			if err != nil {
+				fmt.Printf("Error executing bind template for service %s: %v\n", svc.StructName, err)
+			}
 		}
 	}
+
+done:
 
 	fmt.Println("Code generation completed successfully.")
 

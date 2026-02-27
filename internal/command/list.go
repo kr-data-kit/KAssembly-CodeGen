@@ -7,16 +7,12 @@ import (
 )
 
 func ListCommand(
-	key string,
 	method string,
 ) error {
 	// TODO: add ctx config
 	ctx := context.Background()
 
-	data, err := service.FetchServiceSummaries(
-		ctx,
-		key,
-	)
+	data, err := service.FetchSummary(ctx)
 	if err != nil {
 		return err
 	}
@@ -33,14 +29,8 @@ func ListCommand(
 
 func listSimple(
 	ctx context.Context,
-	data []service.ServiceSummary,
+	data []service.Summary,
 ) error {
-	for _, d := range data {
-		spec, err := service.FetchServiceSpec(ctx, d.DocURL)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%-20s : %s\n", spec.ResponseKey, spec.Title)
-	}
+	// TODO : add list
 	return nil
 }
