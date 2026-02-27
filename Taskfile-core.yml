@@ -1,7 +1,4 @@
 # https://taskfile.dev
-
-# require .env file with ASSEMBLY_API_KEY.
-
 version: '3'
 
 vars:
@@ -51,9 +48,6 @@ tasks:
       BINARY_FILE: '{{.BINARY_NAME | default "openassemblybinder"}}{{if eq OS "windows"}}.exe{{end}}'
       BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean | toSlash }}'
       BINARY_PATH: "{{joinPath .BUILD_DIR .BINARY_FILE | clean | toSlash}}"
-    envs:
-      - ASSEMBLY_API_KEY: 
-          ref: .ASSEMBLY_API_KEY
     cmds:
       - cmd: echo "Listing APIs using binary at {{.BINARY_PATH}}"
       - cmd: "{{.BINARY_PATH}} list"
@@ -68,9 +62,6 @@ tasks:
 
       TARGET_DIR: '{{.TARGET_DIR | default (joinPath .TASKFILE_DIR "./out")| clean | toSlash}}'
       PACKAGE_NAME: '{{.PACKAGE_NAME | default "openassemblyclient"}}'
-    envs:
-      - ASSEMBLY_API_KEY:
-          ref: .ASSEMBLY_API_KEY
     cmds:
       - cmd: echo "Generating client code using binary at {{.BINARY_PATH}}"
       - cmd: > 
