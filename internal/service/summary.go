@@ -57,6 +57,11 @@ func FetchSummary(ctx context.Context) ([]Summary, error) {
 	allItems = append(allItems, check.APIList...)
 
 	for page := 2; page <= check.Pages; page++ {
+		// Check if context is cancelled
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("summary fetch cancelled: %w", ctx.Err())
+		}
+
 		pageResult, err := fetchSummaryResponse(ctx, page, defaultPageSize)
 		if err != nil {
 			return nil, err

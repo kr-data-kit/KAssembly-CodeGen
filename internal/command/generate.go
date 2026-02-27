@@ -55,28 +55,41 @@ func GenerateCommand(
 	}
 
 	// TODO: add ctx config
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	services, err := service.GenerateServices(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to generate services: %v", err)
 	}
 
-	for result := range services {
-		if result.Error != nil {
-			fmt.Printf("Error generating service: %v\n", result.Error)
-		}
-		svc := result.Service
-		bindData := generator.BindTemplateData{
-			GlobalTemplateData: globalData,
-			Service:            svc,
-		}
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("code generation cancelled: %v", ctx.Err())
+		case result, ok := <-services:
+			if !ok {
+				// channel closed, all services processed
+				goto done
+			}
+			if result.Error != nil {
+				fmt.Printf("Error generating service: %v\n", result.Error)
+				continue
+			}
+			svc := result.Service
+			bindData := generator.BindTemplateData{
+				GlobalTemplateData: globalData,
+				Service:            svc,
+			}
 
-		err = generator.ExecuteBindTemplate(outputPath, bindData)
-		if err != nil {
-			fmt.Printf("Error executing bind template for service %s: %v\n", svc.StructName, err)
+			err = generator.ExecuteBindTemplate(outputPath, bindData)
+			if err != nil {
+				fmt.Printf("Error executing bind template for service %s: %v\n", svc.StructName, err)
+			}
 		}
 	}
+
+done:
 
 	fmt.Println("Code generation completed successfully.")
 

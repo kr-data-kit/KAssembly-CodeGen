@@ -68,6 +68,15 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 		defer close(returnChan)
 
 		for _, item := range summaries {
+			// Check if context is cancelled
+			if ctx.Err() != nil {
+				returnChan <- &ServiceResult{
+					Service: nil,
+					Error:   fmt.Errorf("service generation cancelled: %w", ctx.Err()),
+				}
+				return
+			}
+
 			if !strings.ContainsRune(item.ServiceTypesRaw, 'A') {
 				continue
 			}
@@ -78,6 +87,7 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 					Service: nil,
 					Error:   fmt.Errorf("failed to fetch query data for %s: %w", item.ID, err),
 				}
+				continue
 			}
 
 			spec, err := FetchServiceSpec(ctx, item.ID, query.InfSeq)
@@ -86,6 +96,7 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 					Service: nil,
 					Error:   fmt.Errorf("failed to fetch service spec for %s: %w", item.ID, err),
 				}
+				continue
 			}
 
 			service := &Service{
