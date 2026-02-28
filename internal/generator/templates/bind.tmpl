@@ -13,6 +13,8 @@ import (
 
 const (
     {{.Service.ID}}ApiRes = "{{.Service.ResponseKey}}"
+    {{.Service.ID}}InfId = "{{.Service.ID}}"
+    {{.Service.ID}}InfSeq = "{{.Service.InfSeq}}"
 )
 
 {{ range $alter := .Service.AlterStructNames -}}
@@ -35,7 +37,19 @@ type {{KebabToPascalCase .Service.StructName}}Params struct {
     {{- if $var.Example}}
     // (Reference : {{RemoveLF $var.Example}})
     {{- end }}
-    {{ScreamSnakeToPascalCase $var.ID }} string `query:"{{ $var.ID }}"`
+    {{ScreamSnakeToPascalCase $var.ID }} string `query:"{{ $var.ID }}" db:"{{ ToLowerCase $var.ID }}"`
+    {{- end }}
+}
+
+// {{KebabToPascalCase .Service.StructName}} is a result struct for {{.Service.Title}}.
+// API : {{RemoveLF .Service.Description}}
+type {{KebabToPascalCase .Service.StructName}} struct {
+    {{- range $col := .Service.Cols }}
+    // {{ScreamSnakeToPascalCase $col.ID }} : {{$col.Name}} 
+    {{- if $col.Unit}}
+    // (Unit : {{ $col.Unit }})
+    {{- end }}
+    {{ScreamSnakeToPascalCase $col.ID }} string `json:"{{ $col.ID }}" db:"{{ ToLowerCase $col.ID }}"`
     {{- end }}
 }
 
@@ -50,7 +64,10 @@ func (p *{{KebabToPascalCase .Service.StructName}}Params) Encode(params *url.Val
 }
 
 // Fetch{{KebabToPascalCase .Service.StructName}} calls the {{.Service.Title}} API.
-func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}(ctx context.Context, params *{{KebabToPascalCase .Service.StructName}}Params) ([]{{KebabToPascalCase .Service.StructName}}, APIStatus, error) {
+func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}(
+    ctx context.Context,
+    params *{{KebabToPascalCase .Service.StructName}}Params,
+) (Response[{{KebabToPascalCase .Service.StructName}}], error) {
     return fetchApi[{{KebabToPascalCase .Service.StructName}}](ctx, c, "{{.Service.ResponseKey}}", params)
 }
 
@@ -66,14 +83,21 @@ func (p *{{KebabToPascalCase .Service.StructName}}Params) IsValid() bool {
     return true
 }
 
-// {{KebabToPascalCase .Service.StructName}} is a result struct for {{.Service.Title}}.
-// API : {{RemoveLF .Service.Description}}
-type {{KebabToPascalCase .Service.StructName}} struct {
-    {{- range $col := .Service.Cols }}
-    // {{ScreamSnakeToPascalCase $col.ID }} : {{$col.Name}} 
-    {{- if $col.Unit}}
-    // (Unit : {{ $col.Unit }})
-    {{- end }}
-    {{ScreamSnakeToPascalCase $col.ID }} string `json:"{{ $col.ID }}"`
-    {{- end }}
+{{ if .Service.ProvidesData -}}
+// Fetch{{KebabToPascalCase .Service.StructName}}BulkJson fetches data from the {{.Service.Title}} API using bulk JSON endpoint.
+// BindTemplate renders the bind template to produce assembly binding code.
+// It consumes input data describing components and relationships and outputs the generated code.
+// Note: While this function can handle datasets of 10,000 items or more, processing such large volumes may impose significant load on the server or runtime.
+// Avoid frequent use on very large datasets to prevent performance and stability issues.
+func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}BulkJson(
+    ctx context.Context,
+) (Response[{{KebabToPascalCase .Service.StructName}}], error) {
+    return fetchBulkJson[{{KebabToPascalCase .Service.StructName}}](
+        ctx,
+        c,
+        {{.Service.ID}}InfId,
+        {{.Service.ID}}InfSeq,
+        {{KebabToPascalCase .Service.StructName}}Params{},
+    )
 }
+{{end}}
