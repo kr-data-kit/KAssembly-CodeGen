@@ -30,6 +30,7 @@ func init() {
 		"KebabToPascalCase":       KebabToPascalCase,
 		"ScreamSnakeToPascalCase": ScreamSnakeToPascalCase,
 		"RemoveLF":                RemoveLF,
+		"ToLowerCase":             ToLowerCase,
 	}
 
 	subFS, err := fs.Sub(templateFS, "templates")
@@ -83,6 +84,10 @@ func ScreamSnakeToPascalCase(input string) string {
 		}
 	}
 	return b.String()
+}
+
+func ToLowerCase(input string) string {
+	return strings.ToLower(input)
 }
 
 func RemoveLF(s string) string {

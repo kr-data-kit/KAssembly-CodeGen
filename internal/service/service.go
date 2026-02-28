@@ -12,6 +12,7 @@ type Service struct {
 	Title       string
 	Description string
 	URL         string
+	InfSeq      string
 
 	StructName       string
 	AlterStructNames []string
@@ -21,6 +22,9 @@ type Service struct {
 
 	Params []Variable
 	Cols   []Column
+
+	ProvidesAPI  bool
+	ProvidesData bool
 
 	CCL                  string
 	CommercialUseAllowed bool
@@ -36,11 +40,11 @@ func getStructName(ResponseKey string) string {
 }
 
 func getCommercialUseAllowed(License string) bool {
-	return License != "출처표시 + 상업적 이용금지"
+	return strings.Contains(License, "상업용 금지")
 }
 
 func getAttributionRequired(License string) bool {
-	return License == "출처표시 + 상업적 이용금지" || License == "출처표시"
+	return strings.Contains(License, "출처표시")
 }
 
 func checkRandomName(name string) bool {
@@ -77,7 +81,20 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 				return
 			}
 
-			if !strings.ContainsRune(item.ServiceTypesRaw, 'A') {
+			service := &Service{
+				ID:          item.ID,
+				Title:       item.Title,
+				Description: item.Description,
+
+				AlterStructNames: []string{
+					item.ID,
+				},
+
+				ProvidesAPI:  strings.ContainsRune(item.ServiceTypesRaw, 'A'),
+				ProvidesData: strings.ContainsRune(item.ServiceTypesRaw, 'S'),
+			}
+
+			if !service.ProvidesAPI {
 				continue
 			}
 
@@ -99,27 +116,20 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 				continue
 			}
 
-			service := &Service{
-				ID:          item.ID,
-				Title:       item.Title,
-				Description: item.Description,
-				URL:         fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", item.ID),
+			service.URL = fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", item.ID)
+			service.InfSeq = query.InfSeq
 
-				StructName: getStructName(spec.ResponseKey),
-				AlterStructNames: []string{
-					item.ID,
-				},
+			service.StructName = getStructName(spec.ResponseKey)
 
-				Endpoint:    spec.Endpoint,
-				ResponseKey: spec.ResponseKey,
+			service.Endpoint = spec.Endpoint
+			service.ResponseKey = spec.ResponseKey
 
-				Params: spec.Variables,
-				Cols:   spec.Columns,
+			service.Params = spec.Variables
+			service.Cols = spec.Columns
 
-				CCL:                  query.CCL,
-				CommercialUseAllowed: getCommercialUseAllowed(query.CCL),
-				AttributionRequired:  getAttributionRequired(query.CCL),
-			}
+			service.CCL = query.CCL
+			service.CommercialUseAllowed = getCommercialUseAllowed(query.CCL)
+			service.AttributionRequired = getAttributionRequired(query.CCL)
 
 			returnChan <- &ServiceResult{
 				Service: service,

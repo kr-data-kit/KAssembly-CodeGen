@@ -7,10 +7,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strings"
 )
 
 const (
-	OpenAssemblyBaseURL = "https://open.assembly.go.kr/portal/openapi/"
+	OpenAssemblyBaseURL     = "https://open.assembly.go.kr/portal/openapi/"
+	OpenAssemblyBulkJsonURL = "https://open.assembly.go.kr/portal/data/sheet/downloadSheetData.do"
 )
 
 type {{.ClientName}} struct {
@@ -25,48 +28,66 @@ func New{{.ClientName}}(key string) *{{.ClientName}} {
     }
 }
 
-func fetchApi[T any](ctx context.Context, c *{{.ClientName}}, endpoint string, params ApiParams) ([]T, APIStatus, error) {
+// Response is a generic struct that represents the response from the Open Assembly API.
+type Response[T any] struct {
+	// Status indicates the result of the API call, such as success, no data, or various error conditions.
+	Status APIStatus
+	// Source indicates the origin of the data, such as "bulk-xls", "bulk-json", "api".
+	Source string `json:"source,omitempty" xml:"source,omitempty"`
+	// Data contains the actual records returned by the API, which may be empty if no data is available.
+	Data []T
+}
+
+func fetchApi[T any](
+    ctx context.Context,
+    c *{{.ClientName}},
+    endpoint string,
+    params ApiParams,
+) (Response[T], error) {
     url := c.buildURL(endpoint, params)
     body, err := c.fetchHTTP(ctx, url)
     if err != nil {
-        return nil, -1, err
+        return Response[T]{}, err
     }
 
     var raw map[string]json.RawMessage
     if err := json.Unmarshal(body, &raw); err != nil {
-        return nil, -1, fmt.Errorf("failed to parse response: %w", err)
+        return Response[T]{}, fmt.Errorf("failed to parse response: %w", err)
     }
 
     if resultData, ok := raw["RESULT"]; ok {
         var result Result
         if err := json.Unmarshal(resultData, &result); err != nil {
-            return nil, -1, fmt.Errorf("failed to parse RESULT: %w", err)
+            return Response[T]{}, fmt.Errorf("failed to parse RESULT: %w", err)
         }
         if result.Code == "INFO-200" {
-            return []T{}, StatusNoData, nil
+            return Response[T]{
+                Status: StatusNoData,
+                Source: "api",
+            }, nil
         }
         status, ok := GetStatus(result.Code)
         if !ok {
-            return nil, -1, fmt.Errorf("unknown API status code: %s", result.Code)
+            return Response[T]{}, fmt.Errorf("unknown API status code: %s", result.Code)
         }
 
-        return nil, status, fmt.Errorf("API error: %s - %s", result.Code, result.Message)
+        return Response[T]{Status: status, Source: "api"}, fmt.Errorf("API error: %s - %s", result.Code, result.Message)
     }
 
     data, ok := raw[endpoint]
     if !ok {
-        return nil, -1, fmt.Errorf("unexpected response structure")
+        return Response[T]{}, fmt.Errorf("unexpected response structure")
     }
 
     var item []Item[T]
     if err := json.Unmarshal(data, &item); err != nil {
-        return nil, -1, fmt.Errorf("failed to parse data: %w", err)
+        return Response[T]{}, fmt.Errorf("failed to parse data: %w", err)
     }
     if len(item) < 2 {
-        return nil, -1, fmt.Errorf("insufficient data in response")
+        return Response[T]{}, fmt.Errorf("insufficient data in response")
     }
     // FUTURE : 여기서 item[0]은 메타데이터, item[1]이 실제 데이터임을 보장해야 함
-    return item[1].Row, StatusOK, nil
+    return Response[T]{Data: item[1].Row, Status: StatusOK, Source: "api"}, nil
 }
     
 
@@ -105,4 +126,66 @@ func (c *{{.ClientName}}) fetchHTTP(ctx context.Context, url string) ([]byte, er
         return nil, err
     }
     return body, nil
+}
+
+func fetchBulkJson[T any](
+	ctx context.Context,
+	c *{{.ClientName}},
+	infId string,
+	infSeq string,
+	param any,
+) (Response[T], error) {
+	form := url.Values{}
+	setQueryParams(param, &form)
+	form.Set("infId", infId)
+	form.Set("infSeq", infSeq)
+	form.Set("downloadType", "J")
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		OpenAssemblyBulkJsonURL,
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		return Response[T]{}, err
+	}
+
+	c.setCommonHeaders(req)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept-Encoding", "gzip")
+
+	resp, err := c.Http.Do(req)
+	if err != nil {
+		return Response[T]{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return Response[T]{}, fmt.Errorf("HTTP request failed with status: %s", resp.Status)
+	}
+
+	var data []T
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return Response[T]{}, fmt.Errorf("failed to decode JSON response: %w", err)
+	}
+	if len(data) < 2 {
+		return Response[T]{Status: StatusNoData, Source: "bulk-json"}, nil
+	}
+	return Response[T]{Data: data[1:], Status: StatusOK, Source: "bulk-json"}, nil
+}
+
+func setQueryParams(params any, value *url.Values) {
+	t := reflect.TypeOf(params)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Anonymous {
+			continue
+		}
+		queryTag := field.Tag.Get("query")
+		if queryTag == "" {
+			continue
+		}
+		value.Set(queryTag, "")
+	}
 }

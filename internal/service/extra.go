@@ -69,8 +69,9 @@ func CheckExtra(ctx context.Context, service *Service) (*Service, error) {
 			Title:       service.Title + " (Version 1)",
 			Description: service.Description + " - Updated Version",
 			URL:         fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", ALLBILL),
-			StructName:  getStructName(spec.ResponseKey),
+			InfSeq:      "2",
 
+			StructName: getStructName(spec.ResponseKey),
 			AlterStructNames: []string{
 				ALLBILL,
 			},
@@ -80,6 +81,9 @@ func CheckExtra(ctx context.Context, service *Service) (*Service, error) {
 
 			Params: spec.Variables,
 			Cols:   spec.Columns,
+
+			ProvidesAPI:  true,
+			ProvidesData: true,
 
 			CCL:                  service.CCL,
 			CommercialUseAllowed: service.CommercialUseAllowed,
@@ -108,6 +112,9 @@ func CheckExtra(ctx context.Context, service *Service) (*Service, error) {
 
 			Params: spec.Variables,
 			Cols:   spec.Columns,
+
+			ProvidesAPI:  true,
+			ProvidesData: true,
 
 			CCL:                  service.CCL,
 			CommercialUseAllowed: service.CommercialUseAllowed,
