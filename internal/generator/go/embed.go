@@ -1,4 +1,4 @@
-package generator
+package gogen
 
 import (
 	"embed"
@@ -23,6 +23,7 @@ const (
 	ClientTemplate TemplateName = "client.tmpl"
 	CommonTemplate TemplateName = "common.tmpl"
 	StatusTemplate TemplateName = "status.tmpl"
+	GoModTemplate  TemplateName = "go.mod.tmpl"
 )
 
 func init() {
