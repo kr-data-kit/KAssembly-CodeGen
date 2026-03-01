@@ -12,7 +12,6 @@ type Service struct {
 	Title       string
 	Description string
 	URL         string
-	InfSeq      string
 
 	StructName       string
 	AlterStructNames []string
@@ -24,7 +23,9 @@ type Service struct {
 	Cols   []Column
 
 	ProvidesAPI  bool
+	APIInfSeq    string
 	ProvidesData bool
+	DataInfSeq   string
 
 	CCL                  string
 	CommercialUseAllowed bool
@@ -90,8 +91,24 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 					item.ID,
 				},
 
-				ProvidesAPI:  strings.ContainsRune(item.ServiceTypesRaw, 'A'),
-				ProvidesData: strings.ContainsRune(item.ServiceTypesRaw, 'S'),
+				ProvidesAPI:  false,
+				ProvidesData: false,
+			}
+
+			provides := strings.Split(item.ServiceTypesRaw, ",")
+			for _, item := range provides {
+				parts := strings.Split(item, "-")
+				if len(parts) != 2 {
+					continue
+				}
+				switch parts[0] {
+				case "A":
+					service.ProvidesAPI = true
+					service.APIInfSeq = parts[1]
+				case "S":
+					service.ProvidesData = true
+					service.DataInfSeq = parts[1]
+				}
 			}
 
 			if !service.ProvidesAPI {
@@ -107,7 +124,7 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 				continue
 			}
 
-			spec, err := FetchServiceSpec(ctx, item.ID, query.InfSeq)
+			spec, err := FetchServiceSpec(ctx, item.ID, service.APIInfSeq)
 			if err != nil {
 				returnChan <- &ServiceResult{
 					Service: nil,
@@ -117,7 +134,6 @@ func GenerateServices(ctx context.Context) (chan *ServiceResult, error) {
 			}
 
 			service.URL = fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", item.ID)
-			service.InfSeq = query.InfSeq
 
 			service.StructName = getStructName(spec.ResponseKey)
 

@@ -13,8 +13,7 @@ const (
 )
 
 type QueryData struct {
-	InfSeq string
-	CCL    string
+	CCL string
 }
 
 func FetchQueryData(ctx context.Context, id string) (*QueryData, error) {
@@ -41,9 +40,6 @@ func FetchQueryData(ctx context.Context, id string) (*QueryData, error) {
 	queryData.CCL, _ = doc.
 		Find("#metaInfo table tbody img").
 		Attr("alt")
-	queryData.InfSeq, _ = doc.
-		Find("#openapi-search-form input[name='infSeq']").
-		Attr("value")
 
 	return queryData, nil
 }

@@ -17,7 +17,6 @@ import (
 const (
     {{.Service.ID}}ApiRes = "{{.Service.ResponseKey}}"
     {{.Service.ID}}InfId = "{{.Service.ID}}"
-    {{.Service.ID}}InfSeq = "{{.Service.InfSeq}}"
 )
 
 {{ range $alter := .Service.AlterStructNames -}}
@@ -99,7 +98,7 @@ func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}BulkJson
         ctx,
         c,
         {{.Service.ID}}InfId,
-        {{.Service.ID}}InfSeq,
+        "{{.Service.DataInfSeq}}",
         {{KebabToPascalCase .Service.StructName}}Params{},
     )
 }

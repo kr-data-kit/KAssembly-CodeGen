@@ -20,8 +20,10 @@ func GenerateGo(
 
 	data := gogen.DefaultTemplateData{
 		GlobalTemplateData: globalData,
-		Header:             map[string]string{
-			// TODO : make headers configurable
+		Header: map[string]string{
+			"Content-Type": "application/json",
+			"Host":         "open.assembly.go.kr",
+			"User-Agent":   "Mozilla/5.0",
 		},
 	}
 
