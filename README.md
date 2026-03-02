@@ -1,8 +1,8 @@
 # OpenAssembly-Binder
 
-[국회 열린데이터광장](https://open.assembly.go.kr/portal/openapi/openApiNaListPage.do)에서 제공하는 OpenAPI를 Go 코드로 자동 바인딩해주는 도구입니다.
+[국회 열린데이터광장](https://open.assembly.go.kr/portal/openapi/openApiNaListPage.do)에서 제공하는 OpenAPI를 쉽게 사용할 수 있도록 클라이언트 코드를 생성합니다.
 
-> **상태**: 핵심 기능은 동작하며, 추가 기능과 다른 언어 지원(Python, Rust 등)을 계획 중입니다.
+> **상태**: 핵심 기능은 동작하며, 추가 기능과 다른 언어 지원(Python, Rust 등)을 계획 중입니다. (beta)
 
 ---
 
