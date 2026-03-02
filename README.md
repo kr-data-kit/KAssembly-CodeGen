@@ -46,6 +46,21 @@ go build -o ./build/kassemblycodegen.exe .
   --create-dir
 ```
 
+**특정 서비스만 생성:**
+```bash
+# Go: 지정한 서비스만 생성
+./build/kassemblycodegen generate -m go \
+  --include-services allBill,billInfo \
+  --output ./generated \
+  --create-dir
+
+# Python: 특정 서비스를 제외하고 생성
+./build/kassemblycodegen generate -m python \
+  --exclude-services allBill,billInfo \
+  --output ./generated \
+  --create-dir
+```
+
 | 옵션 | 기본값 | 설명 |
 |------|--------|------|
 | `-m, --language` | - | 생성할 언어 (go, python) **필수** |
@@ -53,6 +68,8 @@ go build -o ./build/kassemblycodegen.exe .
 | `--client` | OpenAssemblyClient | 클라이언트 클래스/구조체 이름 (Go만) |
 | `--output` | ./out | 출력 디렉토리 |
 | `--create-dir` | false | 출력 디렉토리가 없으면 생성 |
+| `--include-services` | (모두) | 지정한 서비스만 생성 (쉼표로 구분된 response keys) |
+| `--exclude-services` | (없음) | 지정한 서비스를 제외하고 생성 (쉼표로 구분된 response keys) |
 
 ### API 목록 조회
 ```bash

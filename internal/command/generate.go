@@ -2,19 +2,21 @@ package command
 
 import (
 	"fmt"
-	"log/slog"
 	"kassemblycodegen/internal/generator"
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	language    string
-	packageName string
-	clientName  string
-	outputPath  string
-	createDir   bool
+	language        string
+	packageName     string
+	clientName      string
+	outputPath      string
+	createDir       bool
+	includeServices []string
+	excludeServices []string
 )
 
 var generateCmd = &cobra.Command{
@@ -37,7 +39,7 @@ Example:
 		}
 
 		slog.Info("Generating code with the following parameters")
-		slog.Info("Generate parameters", "language", language, "package", packageName, "client", clientName, "output", outputPath, "create_dir", createDir)
+		slog.Info("Generate parameters", "language", language, "package", packageName, "client", clientName, "output", outputPath, "create_dir", createDir, "include_services", includeServices, "exclude_services", excludeServices)
 
 		// TODO : add checking [y/n] before proceeding with code generation
 
@@ -56,12 +58,12 @@ Example:
 		// Generate for selected language
 		switch language {
 		case "go":
-			err := generator.GenerateGo(packageName, clientName, outputPath, createDir)
+			err := generator.GenerateGo(packageName, clientName, outputPath, createDir, includeServices, excludeServices)
 			if err != nil {
 				return fmt.Errorf("Go code generation failed: %v", err)
 			}
 		case "python":
-			err := generator.GeneratePython(packageName, outputPath, createDir)
+			err := generator.GeneratePython(packageName, outputPath, createDir, includeServices, excludeServices)
 			if err != nil {
 				return fmt.Errorf("Python code generation failed: %v", err)
 			}
@@ -81,4 +83,6 @@ func init() {
 	generateCmdFlags.StringVar(&clientName, "client", "OpenAssemblyClient", "Client struct name for generated code")
 	generateCmdFlags.StringVar(&outputPath, "output", "./out", "Output path for generated code")
 	generateCmdFlags.BoolVar(&createDir, "create-dir", true, "Create output directory if it does not exist")
+	generateCmdFlags.StringSliceVar(&includeServices, "include-services", []string{}, "Include only specified services (comma-separated response keys)")
+	generateCmdFlags.StringSliceVar(&excludeServices, "exclude-services", []string{}, "Exclude specified services (comma-separated response keys)")
 }

@@ -3,10 +3,10 @@ package generator
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	gogen "kassemblycodegen/internal/generator/go"
 	pygen "kassemblycodegen/internal/generator/python"
 	"kassemblycodegen/internal/service"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -16,11 +16,39 @@ const (
 	RepositoryURL = "https://github.com/kr-data-kit/KAssembly-CodeGen"
 )
 
+// shouldIncludeEndpoint checks if an endpoint should be included based on include/exclude filters
+func shouldIncludeEndpoint(serviceID string, includeList, excludeList []string) bool {
+	// If exclude list has items, check if service is in it
+	if len(excludeList) > 0 {
+		for _, excluded := range excludeList {
+			if serviceID == excluded {
+				return false
+			}
+		}
+	}
+
+	// If include list is empty, include everything (not excluded)
+	if len(includeList) == 0 {
+		return true
+	}
+
+	// If include list has items, check if service is in it
+	for _, included := range includeList {
+		if serviceID == included {
+			return true
+		}
+	}
+
+	return false
+}
+
 func GenerateGo(
 	packageName string,
 	clientName string,
 	outputPath string,
 	createDir bool,
+	includeServices []string,
+	excludeServices []string,
 ) error {
 	globalData := gogen.GlobalTemplateData{
 		PackageName:   packageName,
@@ -70,6 +98,13 @@ func GenerateGo(
 			}
 
 			svc := result.Service
+
+			// Apply service filter
+			if !shouldIncludeEndpoint(svc.ResponseKey, includeServices, excludeServices) {
+				slog.Debug("Skipping endpoint", "response_key", svc.ResponseKey, "title", svc.Title)
+				continue
+			}
+
 			bindData := gogen.BindTemplateData{
 				GlobalTemplateData: globalData,
 				Service:            svc,
@@ -88,6 +123,8 @@ func GeneratePython(
 	packageName string,
 	outputPath string,
 	createDir bool,
+	includeServices []string,
+	excludeServices []string,
 ) error {
 	// Create endpoints directory
 	endpointsDir := filepath.Join(outputPath, "endpoints")
@@ -146,6 +183,13 @@ func GeneratePython(
 			}
 
 			svc := result.Service
+
+			// Apply service filter
+			if !shouldIncludeEndpoint(svc.ResponseKey, includeServices, excludeServices) {
+				slog.Debug("Skipping endpoint", "response_key", svc.ResponseKey, "title", svc.Title)
+				continue
+			}
+
 			allServices = append(allServices, svc)
 
 			endpointData := pygen.EndpointTemplateData{
