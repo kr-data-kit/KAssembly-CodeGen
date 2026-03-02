@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"openassemblybinder/internal/service"
+	"kassemblycodegen/internal/service"
 
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ Supported methods:
   detailed - Show detailed service information
 
 Example:
-  openassemblybinder list --method simple
+  kassemblycodegen list --method simple
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: add ctx config

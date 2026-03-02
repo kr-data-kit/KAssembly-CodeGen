@@ -2,7 +2,7 @@ package gogen
 
 import (
 	"fmt"
-	"openassemblybinder/internal/service"
+	"kassemblycodegen/internal/service"
 	"path"
 	"strings"
 )

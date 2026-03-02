@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 	"log/slog"
-	"openassemblybinder/internal/generator"
+	"kassemblycodegen/internal/generator"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -26,7 +26,7 @@ This command fetches the OpenAssembly API specification and generates
 client code for the specified language and package.
 
 Example:
-  openassemblybinder generate --package myauth --output ./out
+  kassemblycodegen generate --package myauth --output ./out
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if language == "" {

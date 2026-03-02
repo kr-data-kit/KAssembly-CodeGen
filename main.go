@@ -2,7 +2,7 @@ package main
 
 import (
 	"log/slog"
-	"openassemblybinder/internal/command"
+	"kassemblycodegen/internal/command"
 )
 
 func main() {

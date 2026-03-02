@@ -5,7 +5,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "openassemblybinder",
+	Use:   "kassemblycodegen",
 	Short: "OpenAssembly API Client Code Generator",
 	Long: `OpenAssembly-Binder generates client code for the National Assembly of Korea's Open API.
 

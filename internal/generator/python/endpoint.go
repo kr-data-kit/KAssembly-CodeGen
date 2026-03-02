@@ -2,7 +2,7 @@ package pygen
 
 import (
 	"fmt"
-	"openassemblybinder/internal/service"
+	"kassemblycodegen/internal/service"
 	"path"
 	"strings"
 )

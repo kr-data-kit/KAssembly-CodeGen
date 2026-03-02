@@ -1,4 +1,4 @@
-# OpenAssembly-Binder
+# KAssembly-CodeGen
 
 [국회 열린데이터광장](https://open.assembly.go.kr/portal/openapi/openApiNaListPage.do)에서 제공하는 OpenAPI의 클라이언트 코드를 생성합니다.
 
@@ -16,12 +16,12 @@
 
 ```bash
 # 저장소 클론
-git clone https://github.com/rethinking21/OpenAssembly-Binder.git
-cd openassemblybinder
+git clone https://github.com/kr-data-kit/KAssembly-CodeGen
+cd KAssembly-CodeGen
 
 # 의존성 설치 및 빌드
 go mod download
-go build -o ./build/openassemblybinder.exe .
+go build -o ./build/kassemblycodegen.exe .
 ```
 
 ## 사용 방법
@@ -29,17 +29,17 @@ go build -o ./build/openassemblybinder.exe .
 
 **Go 클라이언트 생성:**
 ```bash
-./build/openassemblybinder generate -m go
+./build/kassemblycodegen generate -m go
 ```
 
 **Python 클라이언트 생성:**
 ```bash
-./build/openassemblybinder generate -m python
+./build/kassemblycodegen generate -m python
 ```
 
 **옵션 지정:**
 ```bash
-./build/openassemblybinder generate -m go \
+./build/kassemblycodegen generate -m go \
   --package myauth \
   --client MyClient \
   --output ./generated \
@@ -56,7 +56,7 @@ go build -o ./build/openassemblybinder.exe .
 
 ### API 목록 조회
 ```bash
-./build/openassemblybinder list --method simple
+./build/kassemblycodegen list --method simple
 ```
 
 ---
@@ -66,10 +66,10 @@ go build -o ./build/openassemblybinder.exe .
 ### Go 클라이언트 생성 및 사용
 ```bash
 # 빌드
-go build -o ./build/openassemblybinder.exe .
+go build -o ./build/kassemblycodegen.exe .
 
 # 생성
-./build/openassemblybinder generate -m go --package openassembly --output ./generated --create-dir
+./build/kassemblycodegen generate -m go --package openassembly --output ./generated --create-dir
 
 # 생성된 코드는 ./generated 디렉토리에 위치
 ```
@@ -102,10 +102,10 @@ func main() {
 ### Python 클라이언트 생성 및 사용
 ```bash
 # 빌드
-go build -o ./build/openassemblybinder.exe .
+go build -o ./build/kassemblycodegen.exe .
 
 # 생성
-./build/openassemblybinder generate -m python --package openassemblyclient --output ./generated --create-dir
+./build/kassemblycodegen generate -m python --package openassemblyclient --output ./generated --create-dir
 
 # 의존성 설치
 cd generated

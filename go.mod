@@ -1,4 +1,4 @@
-module openassemblybinder
+module kassemblycodegen
 
 go 1.25.5
 
