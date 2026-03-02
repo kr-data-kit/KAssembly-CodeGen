@@ -48,9 +48,10 @@ tasks:
       BINARY_FILE: '{{.BINARY_NAME | default "openassemblybinder"}}{{if eq OS "windows"}}.exe{{end}}'
       BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean | toSlash }}'
       BINARY_PATH: "{{joinPath .BUILD_DIR .BINARY_FILE | clean | toSlash}}"
+      METHOD: '{{.METHOD | default "simple"}}'
     cmds:
       - cmd: echo "Listing APIs using binary at {{.BINARY_PATH}}"
-      - cmd: "{{.BINARY_PATH}} list"
+      - cmd: "{{.BINARY_PATH}} list --method {{.METHOD}}"
     silent: true
 
   generate:
@@ -59,15 +60,7 @@ tasks:
       BINARY_FILE: '{{.BINARY_NAME | default "openassemblybinder"}}{{if eq OS "windows"}}.exe{{end}}'
       BUILD_DIR: '{{.BUILD_DIR | default (joinPath .TASKFILE_DIR "./build")| clean | toSlash}}'
       BINARY_PATH: "{{joinPath .BUILD_DIR .BINARY_FILE | clean | toSlash}}"
-
-      TARGET_DIR: '{{.TARGET_DIR | default (joinPath .TASKFILE_DIR "./out")| clean | toSlash}}'
-      PACKAGE_NAME: '{{.PACKAGE_NAME | default "openassemblyclient"}}'
     cmds:
       - cmd: echo "Generating client code using binary at {{.BINARY_PATH}}"
-      - cmd: > 
-          {{.BINARY_PATH}} generate 
-          --package {{.PACKAGE_NAME}} 
-          --client {{.CLIENT_NAME}} 
-          --output {{.TARGET_DIR}} 
-          {{if eq .CREATE_DIR true}}--create-dir{{end}}
+      - cmd: "{{.BINARY_PATH}} generate"
     silent: true

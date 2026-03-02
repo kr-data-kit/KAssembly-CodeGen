@@ -3,6 +3,7 @@ package generator
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	gogen "openassemblybinder/internal/generator/go"
 	pygen "openassemblybinder/internal/generator/python"
 	"openassemblybinder/internal/service"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	RepositoryURL = "https://github.com/rethinking21/OpenAssembly-Binder"
+	RepositoryURL = "https://github.com/kr-data-kit/KAssembly-CodeGen"
 )
 
 func GenerateGo(
@@ -64,8 +65,7 @@ func GenerateGo(
 				continue
 			}
 			if result.Error != nil {
-				// TODO : consider logging errors instead of printing to stdout
-				fmt.Printf("Error generating service: %v\n", result.Error)
+				slog.Error("Error generating service", "error", result.Error)
 				continue
 			}
 
@@ -77,7 +77,7 @@ func GenerateGo(
 
 			err = gogen.ExecuteBindTemplate(outputPath, bindData)
 			if err != nil {
-				fmt.Printf("Error executing bind template for service %s: %v\n", svc.StructName, err)
+				slog.Error("Error executing bind template", "service", svc.StructName, "error", err)
 			}
 		}
 	}
@@ -141,8 +141,7 @@ func GeneratePython(
 				continue
 			}
 			if result.Error != nil {
-				// TODO : consider logging errors instead of printing to stdout
-				fmt.Printf("Error generating service: %v\n", result.Error)
+				slog.Error("Error generating service", "error", result.Error)
 				continue
 			}
 
@@ -156,7 +155,7 @@ func GeneratePython(
 
 			err = pygen.ExecuteEndpointTemplate(outputPath, endpointData)
 			if err != nil {
-				fmt.Printf("Error executing endpoint template for service %s: %v\n", svc.ResponseKey, err)
+				slog.Error("Error executing endpoint template", "service", svc.ResponseKey, "error", err)
 			}
 		}
 	}

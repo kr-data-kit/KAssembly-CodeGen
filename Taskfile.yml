@@ -16,12 +16,6 @@ vars:
   BUILD_DIR: ./build
   BINARY_NAME: bind
 
-  # Variables for the generate
-  PACKAGE_NAME: openassemblyclient
-  CLIENT_NAME: OpenAssemblyClient
-  TARGET_DIR: ./out/python
-  CREATE_DIR : true 
-
 tasks:
   default:
     cmds:
@@ -61,13 +55,4 @@ tasks:
       - task: build
     cmds:
       - task: bindings:generate
-        vars:
-          PACKAGE_NAME:
-            ref: .PACKAGE_NAME
-          CLIENT_NAME:
-            ref: .CLIENT_NAME
-          TARGET_DIR:
-            ref: .TARGET_DIR
-          CREATE_DIR:
-            ref: .CREATE_DIR
     silent: true
