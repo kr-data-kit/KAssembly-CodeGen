@@ -34,11 +34,16 @@ func GenerateCommand(
 		}
 	}
 
-	language := "Go" // for test
+	language := "Python" // for test
 
 	switch language {
 	case "Go":
 		err := generator.GenerateGo(packageName, clientName, outputPath, createDir)
+		if err != nil {
+			return fmt.Errorf("code generation failed: %v", err)
+		}
+	case "Python":
+		err := generator.GeneratePython(packageName, outputPath, createDir)
 		if err != nil {
 			return fmt.Errorf("code generation failed: %v", err)
 		}

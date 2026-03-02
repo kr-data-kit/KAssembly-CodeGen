@@ -1,4 +1,4 @@
-package gogen
+package pygen
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 
 type GlobalTemplateData struct {
 	PackageName   string
-	ClientName    string // 필요 없어짐
 	RepositoryURL string
 }
 
