@@ -1,4 +1,4 @@
-package generator
+package gogen
 
 import (
 	"fmt"
@@ -6,8 +6,9 @@ import (
 )
 
 type GlobalTemplateData struct {
-	PackageName string
-	ClientName  string
+	PackageName   string
+	ClientName    string // 필요 없어짐
+	RepositoryURL string
 }
 
 func ExecuteTemplate(templateName TemplateName, file string, data any) error {

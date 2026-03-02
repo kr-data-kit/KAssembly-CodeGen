@@ -19,7 +19,7 @@ vars:
   # Variables for the generate
   PACKAGE_NAME: openassemblyclient
   CLIENT_NAME: OpenAssemblyClient
-  TARGET_DIR: ./out
+  TARGET_DIR: ./out/python
   CREATE_DIR : true 
 
 tasks:

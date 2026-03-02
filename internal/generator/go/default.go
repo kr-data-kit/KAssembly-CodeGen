@@ -1,4 +1,4 @@
-package generator
+package gogen
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ const (
 	clientCodeName = "client.go"
 	commonCodeName = "common.go"
 	statusCodeName = "status.go"
+	goModCodeName  = "go.mod"
 )
 
 type DefaultTemplateData struct {
@@ -32,5 +33,6 @@ func ExecuteDefaultTemplate(dir string, data DefaultTemplateData) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute status template: %w", err)
 	}
+	// TODO : consider adding go.mod template execution
 	return nil
 }

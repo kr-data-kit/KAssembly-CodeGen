@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"path/filepath"
 )
 
 type ServiceSpecResponse struct {
@@ -64,48 +63,6 @@ type Message struct {
 const (
 	specUrl = "https://open.assembly.go.kr/portal/data/openapi/selectOpenApiMeta.do"
 )
-
-func buildSpecURL(DocURL string) string {
-	u, err := url.Parse(DocURL)
-	if err != nil {
-		return ""
-	}
-	q := u.Query()
-	infId := q.Get("infId")
-	infSeq := q.Get("infSeq")
-	if infId == "" {
-		// fallback to last path segment
-		seg := filepath.Base(u.Path)
-		if seg != "" && seg != "/" {
-			infId = seg
-		}
-	}
-	if infSeq == "" {
-		infSeq = "1"
-	}
-
-	params := url.Values{}
-	params.Add("infId", infId)
-	params.Add("infSeq", infSeq)
-	return specUrl + "?" + params.Encode()
-}
-
-func FetchServiceSpecByURL(ctx context.Context, DocURL string) (*ServiceSpec, error) {
-	url := buildSpecURL(DocURL)
-	if url == "" {
-		return nil, fmt.Errorf("invalid DocURL: %s", DocURL)
-	}
-
-	body, err := fetchHTTP(ctx, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	var resp ServiceSpecResponse
-	if err := json.Unmarshal(body, &resp); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-	return &resp.Data, nil
-}
 
 func FetchServiceSpec(ctx context.Context, infId string, infSeq string) (*ServiceSpec, error) {
 	url := fmt.Sprintf("%s?infId=%s&infSeq=%s", specUrl, url.QueryEscape(infId), url.QueryEscape(infSeq))
