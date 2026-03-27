@@ -14,6 +14,8 @@
 
 - `generate` 진행과정 표시
 
+- 생성물에 doc 추가
+
 ---
 
 # Future
