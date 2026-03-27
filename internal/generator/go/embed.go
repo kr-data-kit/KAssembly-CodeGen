@@ -19,11 +19,14 @@ var (
 )
 
 const (
-	BindTemplate   TemplateName = "bind.tmpl"
-	ClientTemplate TemplateName = "client.tmpl"
-	CommonTemplate TemplateName = "common.tmpl"
-	StatusTemplate TemplateName = "status.tmpl"
-	GoModTemplate  TemplateName = "go.mod.tmpl"
+	BindTemplate       TemplateName = "bind.tmpl"
+	ClientTemplate     TemplateName = "client.tmpl"
+	PagingTemplate     TemplateName = "paging.tmpl"
+	ModelsTemplate     TemplateName = "models.tmpl"
+	InterfacesTemplate TemplateName = "interfaces.tmpl"
+	RequesterTemplate  TemplateName = "requester.tmpl"
+	StatusTemplate     TemplateName = "status.tmpl"
+	GoModTemplate      TemplateName = "gomod.tmpl"
 )
 
 func init() {

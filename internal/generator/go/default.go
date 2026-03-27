@@ -6,10 +6,13 @@ import (
 )
 
 const (
-	clientCodeName = "client.go"
-	commonCodeName = "common.go"
-	statusCodeName = "status.go"
-	goModCodeName  = "go.mod"
+	clientCodeName     = "client.go"
+	pagingCodeName     = "paging.go"
+	modelsCodeName     = "models.go"
+	interfacesCodeName = "interfaces.go"
+	requesterCodeName  = "requester.go"
+	statusCodeName     = "status.go"
+	goModCodeName      = "go.mod"
 )
 
 type DefaultTemplateData struct {
@@ -23,10 +26,25 @@ func ExecuteDefaultTemplate(dir string, data DefaultTemplateData) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute client template: %w", err)
 	}
-	common := path.Join(dir, commonCodeName)
-	err = ExecuteTemplate(CommonTemplate, common, data.GlobalTemplateData)
+	paging := path.Join(dir, pagingCodeName)
+	err = ExecuteTemplate(PagingTemplate, paging, data.GlobalTemplateData)
 	if err != nil {
-		return fmt.Errorf("failed to execute common template: %w", err)
+		return fmt.Errorf("failed to execute paging template: %w", err)
+	}
+	models := path.Join(dir, modelsCodeName)
+	err = ExecuteTemplate(ModelsTemplate, models, data.GlobalTemplateData)
+	if err != nil {
+		return fmt.Errorf("failed to execute models template: %w", err)
+	}
+	interfaces := path.Join(dir, interfacesCodeName)
+	err = ExecuteTemplate(InterfacesTemplate, interfaces, data.GlobalTemplateData)
+	if err != nil {
+		return fmt.Errorf("failed to execute interfaces template: %w", err)
+	}
+	requester := path.Join(dir, requesterCodeName)
+	err = ExecuteTemplate(RequesterTemplate, requester, data.GlobalTemplateData)
+	if err != nil {
+		return fmt.Errorf("failed to execute requester template: %w", err)
 	}
 	status := path.Join(dir, statusCodeName)
 	err = ExecuteTemplate(StatusTemplate, status, data.GlobalTemplateData)

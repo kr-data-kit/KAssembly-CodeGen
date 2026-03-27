@@ -4,6 +4,8 @@
 
 - 테스트 코드를 만들어야 함
 
+- include/exculde 시에 2가 있는 건 포함이 안되는 문제가 있음
+
 ## CLI
 
 - `ctx` config 추가
@@ -23,8 +25,6 @@
 - example 자동 생성
 
 - service 구조체가 값이 빠져도 gen이 가능하게 설계를 바꾸기
-
-- `common.go` 손보기 (`xml` 제거) : xml로 바꾸는 것은 현재 불필요하지만, 없애는 게 급선무는 아님
 
 - bulk update (xlsx) : 외부 패키지 필요 + json에 비해 어려움
 

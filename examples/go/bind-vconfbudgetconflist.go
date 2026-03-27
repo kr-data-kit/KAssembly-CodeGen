@@ -35,6 +35,21 @@ type VCONFBUDGETCONFLISTParams struct {
     CmitCd string `query:"CMIT_CD" db:"cmit_cd"`
 }
 
+func (p *VCONFBUDGETCONFLISTParams) Next()               { p.Index += 1 }
+func (p *VCONFBUDGETCONFLISTParams) PageIndex(index int) { p.Index += index }
+func (p *VCONFBUDGETCONFLISTParams) PageSize(size int)   { p.Size += size }
+
+// Encode encodes VCONFBUDGETCONFLISTParams as URL query parameters.
+func (p *VCONFBUDGETCONFLISTParams) Encode(params *url.Values) {
+    p.CommonParams.Encode(params)
+    if p.Eraco != "" {
+        params.Add("ERACO", p.Eraco)
+    }
+    if p.CmitCd != "" {
+        params.Add("CMIT_CD", p.CmitCd)
+    }
+}
+
 // VCONFBUDGETCONFLIST is a result struct for 예결산특별위원회 회의록.
 // API : 예결산특별위원회 회의록을 제공합니다.
 type VCONFBUDGETCONFLIST struct {
@@ -58,31 +73,89 @@ type VCONFBUDGETCONFLIST struct {
     DownUrl string `json:"DOWN_URL" db:"down_url"`
 }
 
-// Encode encodes VCONFBUDGETCONFLISTParams as URL query parameters.
-func (p *VCONFBUDGETCONFLISTParams) Encode(params *url.Values) {
-    p.CommonParams.Encode(params)
-    if p.Eraco != "" {
-        params.Add("ERACO", p.Eraco)
-    }
-    if p.CmitCd != "" {
-        params.Add("CMIT_CD", p.CmitCd)
-    }
+// GetConfId returns the "회의ID" value.
+func (r *VCONFBUDGETCONFLIST) GetConfId() string {
+    return r.ConfId
 }
 
-// FetchVCONFBUDGETCONFLIST calls the 예결산특별위원회 회의록 API.
-func (c *OpenAssemblyClient) FetchVCONFBUDGETCONFLIST(
-    ctx context.Context,
-    params *VCONFBUDGETCONFLISTParams,
-) (Response[VCONFBUDGETCONFLIST], error) {
-    return fetchApi[VCONFBUDGETCONFLIST](ctx, c, "VCONFBUDGETCONFLIST", params)
+// GetEraco returns the "대수" value.
+func (r *VCONFBUDGETCONFLIST) GetEraco() string {
+    return r.Eraco
 }
 
-// IsValid checks the validity of VCONFBUDGETCONFLISTParams.
-func (p *VCONFBUDGETCONFLISTParams) IsValid() bool {
-    if p.Eraco == "" {
-        return false
-    }
-    return true
+// GetSess returns the "회기" value.
+func (r *VCONFBUDGETCONFLIST) GetSess() string {
+    return r.Sess
+}
+
+// GetDgr returns the "차수" value.
+func (r *VCONFBUDGETCONFLIST) GetDgr() string {
+    return r.Dgr
+}
+
+// GetConfDt returns the "회의일자" value.
+func (r *VCONFBUDGETCONFLIST) GetConfDt() string {
+    return r.ConfDt
+}
+
+// GetConfKnd returns the "회의종류" value.
+func (r *VCONFBUDGETCONFLIST) GetConfKnd() string {
+    return r.ConfKnd
+}
+
+// GetCmitCd returns the "위원회코드" value.
+func (r *VCONFBUDGETCONFLIST) GetCmitCd() string {
+    return r.CmitCd
+}
+
+// GetCmitNm returns the "위원회명" value.
+func (r *VCONFBUDGETCONFLIST) GetCmitNm() string {
+    return r.CmitNm
+}
+
+// GetDownUrl returns the "다운로드 URL" value.
+func (r *VCONFBUDGETCONFLIST) GetDownUrl() string {
+    return r.DownUrl
+}
+
+// VCONFBUDGETCONFLISTBuilder is a builder for 예결산특별위원회 회의록.
+type VCONFBUDGETCONFLISTBuilder struct {
+    BaseAPIRequester[*VCONFBUDGETCONFLISTParams, VCONFBUDGETCONFLIST]
+}
+
+// Next increments the page index.
+func (b *VCONFBUDGETCONFLISTBuilder) Next() *VCONFBUDGETCONFLISTBuilder {
+	b.BaseAPIRequester.Next()
+	return b
+}
+
+// PageIndex sets the page index.
+func (b *VCONFBUDGETCONFLISTBuilder) PageIndex(index int) *VCONFBUDGETCONFLISTBuilder {
+	b.BaseAPIRequester.PageIndex(index)
+	return b
+}
+
+// PageSize sets the page size.
+func (b *VCONFBUDGETCONFLISTBuilder) PageSize(size int) *VCONFBUDGETCONFLISTBuilder {
+	b.BaseAPIRequester.PageSize(size)
+	return b
+}
+
+// Eraco sets the 대수 parameter.
+func (b *VCONFBUDGETCONFLISTBuilder) Eraco(value string) *VCONFBUDGETCONFLISTBuilder {
+    b.params.Eraco = value
+    return b
+}
+
+// CmitCd sets the 위원회코드 parameter.
+func (b *VCONFBUDGETCONFLISTBuilder) CmitCd(value string) *VCONFBUDGETCONFLISTBuilder {
+    b.params.CmitCd = value
+    return b
+}
+
+// Fetch calls the 예결산특별위원회 회의록 API.
+func (b *VCONFBUDGETCONFLISTBuilder) Fetch(ctx context.Context) (Response[VCONFBUDGETCONFLIST], error) {
+    return b.BaseAPIRequester.Fetch(ctx)
 }
 
 // FetchVCONFBUDGETCONFLISTBulkJson fetches data from the 예결산특별위원회 회의록 API using bulk JSON endpoint.
@@ -90,14 +163,23 @@ func (p *VCONFBUDGETCONFLISTParams) IsValid() bool {
 // It consumes input data describing components and relationships and outputs the generated code.
 // Note: While this function can handle datasets of 10,000 items or more, processing such large volumes may impose significant load on the server or runtime.
 // Avoid frequent use on very large datasets to prevent performance and stability issues.
-func (c *OpenAssemblyClient) FetchVCONFBUDGETCONFLISTBulkJson(
-    ctx context.Context,
-) (Response[VCONFBUDGETCONFLIST], error) {
+func (b *VCONFBUDGETCONFLISTBuilder) FetchBulkJson(ctx context.Context) (Response[VCONFBUDGETCONFLIST], error) {
     return fetchBulkJson[VCONFBUDGETCONFLIST](
         ctx,
-        c,
+        b.client,
         OOWY4R001216HX11505InfId,
         "1",
         VCONFBUDGETCONFLISTParams{},
     )
+}
+
+// NewVCONFBUDGETCONFLISTBuilder creates a new VCONFBUDGETCONFLISTBuilder
+func (c *OpenAssemblyClient) NewVCONFBUDGETCONFLISTBuilder() *VCONFBUDGETCONFLISTBuilder {
+    return &VCONFBUDGETCONFLISTBuilder{
+        BaseAPIRequester: BaseAPIRequester[*VCONFBUDGETCONFLISTParams, VCONFBUDGETCONFLIST]{
+            client: c,
+            params: &VCONFBUDGETCONFLISTParams{},
+            apiResKey: "VCONFBUDGETCONFLIST",
+        },
+    }
 }

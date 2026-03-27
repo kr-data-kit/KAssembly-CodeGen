@@ -37,6 +37,24 @@ type OPENSRVAPIParams struct {
     SrcExp string `query:"SRC_EXP" db:"src_exp"`
 }
 
+func (p *OPENSRVAPIParams) Next()               { p.Index += 1 }
+func (p *OPENSRVAPIParams) PageIndex(index int) { p.Index += index }
+func (p *OPENSRVAPIParams) PageSize(size int)   { p.Size += size }
+
+// Encode encodes OPENSRVAPIParams as URL query parameters.
+func (p *OPENSRVAPIParams) Encode(params *url.Values) {
+    p.CommonParams.Encode(params)
+    if p.InfId != "" {
+        params.Add("INF_ID", p.InfId)
+    }
+    if p.InfNm != "" {
+        params.Add("INF_NM", p.InfNm)
+    }
+    if p.SrcExp != "" {
+        params.Add("SRC_EXP", p.SrcExp)
+    }
+}
+
 // OPENSRVAPI is a result struct for OPEN API 전체 현황.
 // API : OPEN API 전체현황
 type OPENSRVAPI struct {
@@ -68,30 +86,133 @@ type OPENSRVAPI struct {
     LoadCont string `json:"LOAD_CONT" db:"load_cont"`
 }
 
-// Encode encodes OPENSRVAPIParams as URL query parameters.
-func (p *OPENSRVAPIParams) Encode(params *url.Values) {
-    p.CommonParams.Encode(params)
-    if p.InfId != "" {
-        params.Add("INF_ID", p.InfId)
-    }
-    if p.InfNm != "" {
-        params.Add("INF_NM", p.InfNm)
-    }
-    if p.SrcExp != "" {
-        params.Add("SRC_EXP", p.SrcExp)
-    }
+// GetInfId returns the "공공데이터ID" value.
+func (r *OPENSRVAPI) GetInfId() string {
+    return r.InfId
 }
 
-// FetchOPENSRVAPI calls the OPEN API 전체 현황 API.
-func (c *OpenAssemblyClient) FetchOPENSRVAPI(
-    ctx context.Context,
-    params *OPENSRVAPIParams,
-) (Response[OPENSRVAPI], error) {
-    return fetchApi[OPENSRVAPI](ctx, c, "OPENSRVAPI", params)
+// GetInfNm returns the "공공데이터명" value.
+func (r *OPENSRVAPI) GetInfNm() string {
+    return r.InfNm
 }
 
-// IsValid checks the validity of OPENSRVAPIParams.
-func (p *OPENSRVAPIParams) IsValid() bool {
-    return true
+// GetInfExp returns the "공공데이터설명" value.
+func (r *OPENSRVAPI) GetInfExp() string {
+    return r.InfExp
 }
 
+// GetCateNm returns the "분류체계" value.
+func (r *OPENSRVAPI) GetCateNm() string {
+    return r.CateNm
+}
+
+// GetOpenDttm returns the "공개일자" value.
+func (r *OPENSRVAPI) GetOpenDttm() string {
+    return r.OpenDttm
+}
+
+// GetOrgNm returns the "제공기관" value.
+func (r *OPENSRVAPI) GetOrgNm() string {
+    return r.OrgNm
+}
+
+// GetLoadDttm returns the "최종수정일자" value.
+func (r *OPENSRVAPI) GetLoadDttm() string {
+    return r.LoadDttm
+}
+
+// GetSrcExp returns the "원본시스템" value.
+func (r *OPENSRVAPI) GetSrcExp() string {
+    return r.SrcExp
+}
+
+// GetDdcUrl returns the "명세서URL" value.
+func (r *OPENSRVAPI) GetDdcUrl() string {
+    return r.DdcUrl
+}
+
+// GetSrvUrl returns the "서비스URL" value.
+func (r *OPENSRVAPI) GetSrvUrl() string {
+    return r.SrvUrl
+}
+
+// GetCclNm returns the "이용허락조건" value.
+func (r *OPENSRVAPI) GetCclNm() string {
+    return r.CclNm
+}
+
+// GetLoadNm returns the "공개주기" value.
+func (r *OPENSRVAPI) GetLoadNm() string {
+    return r.LoadNm
+}
+
+// GetLoadCont returns the "공개시기" value.
+func (r *OPENSRVAPI) GetLoadCont() string {
+    return r.LoadCont
+}
+
+// OPENSRVAPIBuilder is a builder for OPEN API 전체 현황.
+type OPENSRVAPIBuilder struct {
+    BaseAPIRequester[*OPENSRVAPIParams, OPENSRVAPI]
+}
+
+// Next increments the page index.
+func (b *OPENSRVAPIBuilder) Next() *OPENSRVAPIBuilder {
+	b.BaseAPIRequester.Next()
+	return b
+}
+
+// PageIndex sets the page index.
+func (b *OPENSRVAPIBuilder) PageIndex(index int) *OPENSRVAPIBuilder {
+	b.BaseAPIRequester.PageIndex(index)
+	return b
+}
+
+// PageSize sets the page size.
+func (b *OPENSRVAPIBuilder) PageSize(size int) *OPENSRVAPIBuilder {
+	b.BaseAPIRequester.PageSize(size)
+	return b
+}
+
+// InfId sets the 공공데이터ID parameter.
+func (b *OPENSRVAPIBuilder) InfId(value string) *OPENSRVAPIBuilder {
+    b.params.InfId = value
+    return b
+}
+
+// InfNm sets the 공공데이터명 parameter.
+func (b *OPENSRVAPIBuilder) InfNm(value string) *OPENSRVAPIBuilder {
+    b.params.InfNm = value
+    return b
+}
+
+// SrcExp sets the 원본시스템 parameter.
+func (b *OPENSRVAPIBuilder) SrcExp(value string) *OPENSRVAPIBuilder {
+    b.params.SrcExp = value
+    return b
+}
+
+// Fetch calls the OPEN API 전체 현황 API.
+func (b *OPENSRVAPIBuilder) Fetch(ctx context.Context) (Response[OPENSRVAPI], error) {
+    return b.BaseAPIRequester.Fetch(ctx)
+}
+
+// FetchOPENSRVAPIBulkJson fetches data from the OPEN API 전체 현황 API using bulk JSON endpoint.
+// BindTemplate renders the bind template to produce assembly binding code.
+// It consumes input data describing components and relationships and outputs the generated code.
+// Note: While this function can handle datasets of 10,000 items or more, processing such large volumes may impose significant load on the server or runtime.
+// Avoid frequent use on very large datasets to prevent performance and stability issues.
+func (b *OPENSRVAPIBuilder) FetchBulkJson(ctx context.Context) (Response[OPENSRVAPI], error) {
+    return b.BaseAPIRequester.Fetch(ctx)
+}
+
+// NewOPENSRVAPIBuilder creates a new OPENSRVAPIBuilder
+func (c *OpenAssemblyClient) NewOPENSRVAPIBuilder() *OPENSRVAPIBuilder {
+    return &OPENSRVAPIBuilder{
+        BaseAPIRequester: BaseAPIRequester[*OPENSRVAPIParams, OPENSRVAPI]{
+            client: c,
+            params: &OPENSRVAPIParams{},
+            apiResKey: "OPENSRVAPI",
+        },
+    }
+}
