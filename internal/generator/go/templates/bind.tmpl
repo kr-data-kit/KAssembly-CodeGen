@@ -44,8 +44,8 @@ type {{KebabToPascalCase .Service.StructName}}Params struct {
 }
 
 func (p *{{KebabToPascalCase .Service.StructName}}Params) Next()               { p.Index += 1 }
-func (p *{{KebabToPascalCase .Service.StructName}}Params) PageIndex(index int) { p.Index += index }
-func (p *{{KebabToPascalCase .Service.StructName}}Params) PageSize(size int)   { p.Size += size }
+func (p *{{KebabToPascalCase .Service.StructName}}Params) PageIndex(index int) { p.Index = index }
+func (p *{{KebabToPascalCase .Service.StructName}}Params) PageSize(size int)   { p.Size = size }
 
 // Encode encodes {{KebabToPascalCase .Service.StructName}}Params as URL query parameters.
 func (p *{{KebabToPascalCase .Service.StructName}}Params) Encode(params *url.Values) {
@@ -112,9 +112,7 @@ func (b *{{KebabToPascalCase .Service.StructName}}Builder) Fetch(ctx context.Con
     return b.BaseAPIRequester.Fetch(ctx)
 }
 
-// Fetch{{KebabToPascalCase .Service.StructName}}BulkJson fetches data from the {{.Service.Title}} API using bulk JSON endpoint.
-// BindTemplate renders the bind template to produce assembly binding code.
-// It consumes input data describing components and relationships and outputs the generated code.
+// Fetch{{KebabToPascalCase .Service.StructName}}BulkJson fetches data from the {{.Service.Title}} API using the bulk JSON endpoint.
 // Note: While this function can handle datasets of 10,000 items or more, processing such large volumes may impose significant load on the server or runtime.
 // Avoid frequent use on very large datasets to prevent performance and stability issues.
 func (b *{{KebabToPascalCase .Service.StructName}}Builder) FetchBulkJson(ctx context.Context) (Response[{{KebabToPascalCase .Service.StructName}}], error) {
@@ -124,10 +122,10 @@ func (b *{{KebabToPascalCase .Service.StructName}}Builder) FetchBulkJson(ctx con
         b.client,
         {{.Service.ID}}InfId,
         "{{.Service.DataInfSeq}}",
-        {{KebabToPascalCase .Service.StructName}}Params{},
+        *b.params,
     )
     {{- else -}}
-    return b.BaseAPIRequester.Fetch(ctx)
+    return b.BaseAPIRequester.FetchBulkJson(ctx)
     {{- end }}
 }
 

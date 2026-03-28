@@ -8,13 +8,9 @@ import (
 	"strconv"
 )
 
-type Paging struct {
+type CommonParams struct {
 	Index int `query:"pIndex,omitempty"`
 	Size  int `query:"pSize,omitempty"`
-}
-
-type CommonParams struct {
-	Paging
 }
 
 func (c *CommonParams) Encode(params *url.Values) {

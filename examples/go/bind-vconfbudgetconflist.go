@@ -36,8 +36,8 @@ type VCONFBUDGETCONFLISTParams struct {
 }
 
 func (p *VCONFBUDGETCONFLISTParams) Next()               { p.Index += 1 }
-func (p *VCONFBUDGETCONFLISTParams) PageIndex(index int) { p.Index += index }
-func (p *VCONFBUDGETCONFLISTParams) PageSize(size int)   { p.Size += size }
+func (p *VCONFBUDGETCONFLISTParams) PageIndex(index int) { p.Index = index }
+func (p *VCONFBUDGETCONFLISTParams) PageSize(size int)   { p.Size = size }
 
 // Encode encodes VCONFBUDGETCONFLISTParams as URL query parameters.
 func (p *VCONFBUDGETCONFLISTParams) Encode(params *url.Values) {
@@ -158,9 +158,7 @@ func (b *VCONFBUDGETCONFLISTBuilder) Fetch(ctx context.Context) (Response[VCONFB
     return b.BaseAPIRequester.Fetch(ctx)
 }
 
-// FetchVCONFBUDGETCONFLISTBulkJson fetches data from the 예결산특별위원회 회의록 API using bulk JSON endpoint.
-// BindTemplate renders the bind template to produce assembly binding code.
-// It consumes input data describing components and relationships and outputs the generated code.
+// FetchVCONFBUDGETCONFLISTBulkJson fetches data from the 예결산특별위원회 회의록 API using the bulk JSON endpoint.
 // Note: While this function can handle datasets of 10,000 items or more, processing such large volumes may impose significant load on the server or runtime.
 // Avoid frequent use on very large datasets to prevent performance and stability issues.
 func (b *VCONFBUDGETCONFLISTBuilder) FetchBulkJson(ctx context.Context) (Response[VCONFBUDGETCONFLIST], error) {
@@ -169,7 +167,7 @@ func (b *VCONFBUDGETCONFLISTBuilder) FetchBulkJson(ctx context.Context) (Respons
         b.client,
         OOWY4R001216HX11505InfId,
         "1",
-        VCONFBUDGETCONFLISTParams{},
+        *b.params,
     )
 }
 

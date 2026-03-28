@@ -26,4 +26,4 @@ type APIRequester[R any] interface {
 	FetchBulkJson(ctx context.Context) (Response[R], error)
 }
 
-var BulkImpossibleErr = errors.New("impossible to bulk")
+var BulkNotSupportedErr = errors.New("bulk JSON fetch is not supported for this endpoint")

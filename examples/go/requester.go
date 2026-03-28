@@ -20,5 +20,5 @@ func (b *BaseAPIRequester[P, R]) Fetch(ctx context.Context) (Response[R], error)
 	return fetchApi[R](ctx, b.client, b.apiResKey, b.params)
 }
 func (b *BaseAPIRequester[P, R]) FetchBulkJson(ctx context.Context) (Response[R], error) {
-	return Response[R]{}, BulkImpossibleErr
+	return Response[R]{}, BulkNotSupportedErr
 }
