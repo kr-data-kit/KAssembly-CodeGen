@@ -97,6 +97,7 @@ func fetchApi[T any](
 func (c *OpenAssemblyClient) buildURL(endpoint string, paramStruct ApiParams) string {
 	params := url.Values{}
 	params.Add("KEY", c.Key)
+	params.Add("Type", "json")
 	paramStruct.Encode(&params)
 	return OpenAssemblyBaseURL + endpoint + "?" + params.Encode()
 }

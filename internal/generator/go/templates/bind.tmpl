@@ -43,6 +43,20 @@ type {{KebabToPascalCase .Service.StructName}}Params struct {
     {{- end }}
 }
 
+func (p *{{KebabToPascalCase .Service.StructName}}Params) Next()               { p.Index += 1 }
+func (p *{{KebabToPascalCase .Service.StructName}}Params) PageIndex(index int) { p.Index = index }
+func (p *{{KebabToPascalCase .Service.StructName}}Params) PageSize(size int)   { p.Size = size }
+
+// Encode encodes {{KebabToPascalCase .Service.StructName}}Params as URL query parameters.
+func (p *{{KebabToPascalCase .Service.StructName}}Params) Encode(params *url.Values) {
+    p.CommonParams.Encode(params)
+    {{- range $var := .Service.Params }}
+    if p.{{ScreamSnakeToPascalCase $var.ID }} != "" {
+        params.Add("{{ $var.ID }}", p.{{ScreamSnakeToPascalCase $var.ID }})
+    }
+    {{- end }}
+}
+
 // {{KebabToPascalCase .Service.StructName}} is a result struct for {{.Service.Title}}.
 // API : {{RemoveLF .Service.Description}}
 type {{KebabToPascalCase .Service.StructName}} struct {
@@ -55,51 +69,73 @@ type {{KebabToPascalCase .Service.StructName}} struct {
     {{- end }}
 }
 
-// Encode encodes {{KebabToPascalCase .Service.StructName}}Params as URL query parameters.
-func (p *{{KebabToPascalCase .Service.StructName}}Params) Encode(params *url.Values) {
-    p.CommonParams.Encode(params)
-    {{- range $var := .Service.Params }}
-    if p.{{ScreamSnakeToPascalCase $var.ID }} != "" {
-        params.Add("{{ $var.ID }}", p.{{ScreamSnakeToPascalCase $var.ID }})
-    }
-    {{- end }}
+{{ range $col := .Service.Cols -}}
+// Get{{ScreamSnakeToPascalCase $col.ID }} returns the "{{$col.Name}}" value.
+func (r *{{KebabToPascalCase $.Service.StructName}}) Get{{ScreamSnakeToPascalCase $col.ID }}() string {
+    return r.{{ScreamSnakeToPascalCase $col.ID }}
 }
 
-// Fetch{{KebabToPascalCase .Service.StructName}} calls the {{.Service.Title}} API.
-func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}(
-    ctx context.Context,
-    params *{{KebabToPascalCase .Service.StructName}}Params,
-) (Response[{{KebabToPascalCase .Service.StructName}}], error) {
-    return fetchApi[{{KebabToPascalCase .Service.StructName}}](ctx, c, "{{.Service.ResponseKey}}", params)
+{{ end -}}
+// {{KebabToPascalCase .Service.StructName}}Builder is a builder for {{.Service.Title}}.
+type {{KebabToPascalCase .Service.StructName}}Builder struct {
+    BaseAPIRequester[*{{KebabToPascalCase .Service.StructName}}Params, {{KebabToPascalCase .Service.StructName}}]
 }
 
-// IsValid checks the validity of {{KebabToPascalCase .Service.StructName}}Params.
-func (p *{{KebabToPascalCase .Service.StructName}}Params) IsValid() bool {
-    {{- range $var := .Service.Params }}
-    {{- if $var.RequiredRaw}}
-    if p.{{ScreamSnakeToPascalCase $var.ID }} == "" {
-        return false
-    }
-    {{- end}}
-    {{- end }}
-    return true
+// Next increments the page index.
+func (b *{{KebabToPascalCase .Service.StructName}}Builder) Next() *{{KebabToPascalCase .Service.StructName}}Builder {
+	b.BaseAPIRequester.Next()
+	return b
 }
 
-{{ if .Service.ProvidesData -}}
-// Fetch{{KebabToPascalCase .Service.StructName}}BulkJson fetches data from the {{.Service.Title}} API using bulk JSON endpoint.
-// BindTemplate renders the bind template to produce assembly binding code.
-// It consumes input data describing components and relationships and outputs the generated code.
+// PageIndex sets the page index.
+func (b *{{KebabToPascalCase .Service.StructName}}Builder) PageIndex(index int) *{{KebabToPascalCase .Service.StructName}}Builder {
+	b.BaseAPIRequester.PageIndex(index)
+	return b
+}
+
+// PageSize sets the page size.
+func (b *{{KebabToPascalCase .Service.StructName}}Builder) PageSize(size int) *{{KebabToPascalCase .Service.StructName}}Builder {
+	b.BaseAPIRequester.PageSize(size)
+	return b
+}
+
+{{ range $var := .Service.Params -}}
+// {{ScreamSnakeToPascalCase $var.ID }} sets the {{$var.Name}} parameter.
+func (b *{{KebabToPascalCase $.Service.StructName}}Builder) {{ScreamSnakeToPascalCase $var.ID }}(value string) *{{KebabToPascalCase $.Service.StructName}}Builder {
+    b.params.{{ScreamSnakeToPascalCase $var.ID }} = value
+    return b
+}
+
+{{ end -}}
+// Fetch calls the {{.Service.Title}} API.
+func (b *{{KebabToPascalCase .Service.StructName}}Builder) Fetch(ctx context.Context) (Response[{{KebabToPascalCase .Service.StructName}}], error) {
+    return b.BaseAPIRequester.Fetch(ctx)
+}
+
+// Fetch{{KebabToPascalCase .Service.StructName}}BulkJson fetches data from the {{.Service.Title}} API using the bulk JSON endpoint.
 // Note: While this function can handle datasets of 10,000 items or more, processing such large volumes may impose significant load on the server or runtime.
 // Avoid frequent use on very large datasets to prevent performance and stability issues.
-func (c *{{.ClientName}}) Fetch{{KebabToPascalCase .Service.StructName}}BulkJson(
-    ctx context.Context,
-) (Response[{{KebabToPascalCase .Service.StructName}}], error) {
+func (b *{{KebabToPascalCase .Service.StructName}}Builder) FetchBulkJson(ctx context.Context) (Response[{{KebabToPascalCase .Service.StructName}}], error) {
+    {{ if .Service.ProvidesData -}}
     return fetchBulkJson[{{KebabToPascalCase .Service.StructName}}](
         ctx,
-        c,
+        b.client,
         {{.Service.ID}}InfId,
         "{{.Service.DataInfSeq}}",
-        {{KebabToPascalCase .Service.StructName}}Params{},
+        *b.params,
     )
+    {{- else -}}
+    return b.BaseAPIRequester.FetchBulkJson(ctx)
+    {{- end }}
 }
-{{end}}
+
+// New{{KebabToPascalCase .Service.StructName}}Builder creates a new {{KebabToPascalCase .Service.StructName}}Builder
+func (c *{{.ClientName}}) New{{KebabToPascalCase .Service.StructName}}Builder() *{{KebabToPascalCase .Service.StructName}}Builder {
+    return &{{KebabToPascalCase .Service.StructName}}Builder{
+        BaseAPIRequester: BaseAPIRequester[*{{KebabToPascalCase .Service.StructName}}Params, {{KebabToPascalCase .Service.StructName}}]{
+            client: c,
+            params: &{{KebabToPascalCase .Service.StructName}}Params{},
+            apiResKey: "{{.Service.ResponseKey}}",
+        },
+    }
+}
