@@ -130,7 +130,7 @@ func (b *{{KebabToPascalCase .Service.StructName}}Builder) FetchBulkJson(ctx con
 }
 
 // New{{KebabToPascalCase .Service.StructName}}Builder creates a new {{KebabToPascalCase .Service.StructName}}Builder
-func (c *{{.ClientName}}) New{{KebabToPascalCase .Service.StructName}}Builder() *{{KebabToPascalCase .Service.StructName}}Builder {
+func (c *Client) New{{KebabToPascalCase .Service.StructName}}Builder() *{{KebabToPascalCase .Service.StructName}}Builder {
     return &{{KebabToPascalCase .Service.StructName}}Builder{
         BaseAPIRequester: BaseAPIRequester[*{{KebabToPascalCase .Service.StructName}}Params, {{KebabToPascalCase .Service.StructName}}]{
             client: c,

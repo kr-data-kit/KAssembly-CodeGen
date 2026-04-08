@@ -1,8 +1,12 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"kassemblycodegen/internal/generator"
+	gogen "kassemblycodegen/internal/generator/go"
+	pygen "kassemblycodegen/internal/generator/python"
+	"kassemblycodegen/internal/setting"
 	"log/slog"
 	"os"
 
@@ -10,13 +14,13 @@ import (
 )
 
 var (
-	language        string
-	packageName     string
-	clientName      string
-	outputPath      string
-	createDir       bool
-	includeServices []string
-	excludeServices []string
+	language         string
+	packageName      string
+	outputPath       string
+	createDir        bool
+	includeEndpoints []string
+	excludeEndpoints []string
+	goMod            bool
 )
 
 var generateCmd = &cobra.Command{
@@ -39,7 +43,7 @@ Example:
 		}
 
 		slog.Info("Generating code with the following parameters")
-		slog.Info("Generate parameters", "language", language, "package", packageName, "client", clientName, "output", outputPath, "create_dir", createDir, "include_services", includeServices, "exclude_services", excludeServices)
+		slog.Info("Generate parameters", "language", language, "package", packageName, "output", outputPath, "create_dir", createDir, "include_endpoints", includeEndpoints, "exclude_endpoints", excludeEndpoints, "go_mod", goMod)
 
 		// TODO : add checking [y/n] before proceeding with code generation
 
@@ -56,14 +60,34 @@ Example:
 		}
 
 		// Generate for selected language
+		ctx, cancel := context.WithCancel(cmd.Context())
+		defer cancel()
+
 		switch language {
 		case "go":
-			err := generator.GenerateGo(packageName, clientName, outputPath, createDir, includeServices, excludeServices)
+			set := setting.GoSetting{
+				GlobalSetting: setting.GlobalSetting{
+					Path:      outputPath,
+					CreateDir: createDir,
+				},
+				PackageName: packageName,
+				IsMod:       goMod,
+			}
+			gen := gogen.NewClientGenerator(set)
+			err := generator.Generate(ctx, gen, includeEndpoints, excludeEndpoints)
 			if err != nil {
 				return fmt.Errorf("Go code generation failed: %v", err)
 			}
 		case "python":
-			err := generator.GeneratePython(packageName, outputPath, createDir, includeServices, excludeServices)
+			set := setting.PythonSetting{
+				GlobalSetting: setting.GlobalSetting{
+					Path:      outputPath,
+					CreateDir: createDir,
+				},
+				PackageName: packageName,
+			}
+			gen := pygen.NewClientGenerator(set)
+			err := generator.Generate(ctx, gen, includeEndpoints, excludeEndpoints)
 			if err != nil {
 				return fmt.Errorf("Python code generation failed: %v", err)
 			}
@@ -80,9 +104,9 @@ func init() {
 	generateCmdFlags := generateCmd.Flags()
 	generateCmdFlags.StringVarP(&language, "language", "m", "", "Programming language (go, python) - REQUIRED")
 	generateCmdFlags.StringVar(&packageName, "package", "openassemblyclient", "Package name for generated code")
-	generateCmdFlags.StringVar(&clientName, "client", "OpenAssemblyClient", "Client struct name for generated code")
 	generateCmdFlags.StringVar(&outputPath, "output", "./out", "Output path for generated code")
 	generateCmdFlags.BoolVar(&createDir, "create-dir", true, "Create output directory if it does not exist")
-	generateCmdFlags.StringSliceVar(&includeServices, "include-services", []string{}, "Include only specified services (comma-separated response keys)")
-	generateCmdFlags.StringSliceVar(&excludeServices, "exclude-services", []string{}, "Exclude specified services (comma-separated response keys)")
+	generateCmdFlags.BoolVar(&goMod, "go-mod", false, "Generate go.mod for Go output")
+	generateCmdFlags.StringSliceVar(&includeEndpoints, "include-endpoints", []string{}, "Include only specified endpoints (comma-separated response keys)")
+	generateCmdFlags.StringSliceVar(&excludeEndpoints, "exclude-endpoints", []string{}, "Exclude specified endpoints (comma-separated response keys)")
 }

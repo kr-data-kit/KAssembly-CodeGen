@@ -8,7 +8,7 @@ import (
 )
 
 type BaseAPIRequester[P ApiParams, R any] struct {
-	client *{{.ClientName}}
+	client *Client
 	params P
 	apiResKey  string
 }

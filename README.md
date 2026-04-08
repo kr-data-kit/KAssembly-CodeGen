@@ -41,22 +41,22 @@ go build -o ./build/kassemblycodegen.exe .
 ```bash
 ./build/kassemblycodegen generate -m go \
   --package myauth \
-  --client MyClient \
   --output ./generated \
-  --create-dir
+  --create-dir \
+  --go-mod
 ```
 
-**특정 서비스만 생성:**
+**특정 endpoint만 생성:**
 ```bash
-# Go: 지정한 서비스만 생성
+# Go: 지정한 endpoint만 생성
 ./build/kassemblycodegen generate -m go \
-  --include-services allBill,billInfo \
+  --include-endpoints allBill,billInfo \
   --output ./generated \
   --create-dir
 
-# Python: 특정 서비스를 제외하고 생성
+# Python: 특정 endpoint를 제외하고 생성
 ./build/kassemblycodegen generate -m python \
-  --exclude-services allBill,billInfo \
+  --exclude-endpoints allBill,billInfo \
   --output ./generated \
   --create-dir
 ```
@@ -65,16 +65,11 @@ go build -o ./build/kassemblycodegen.exe .
 |------|--------|------|
 | `-m, --language` | - | 생성할 언어 (go, python) **필수** |
 | `--package` | openassemblyclient | 패키지/모듈 이름 |
-| `--client` | OpenAssemblyClient | 클라이언트 클래스/구조체 이름 (Go만) |
 | `--output` | ./out | 출력 디렉토리 |
-| `--create-dir` | false | 출력 디렉토리가 없으면 생성 |
-| `--include-services` | (모두) | 지정한 서비스만 생성 (쉼표로 구분된 response keys) |
-| `--exclude-services` | (없음) | 지정한 서비스를 제외하고 생성 (쉼표로 구분된 response keys) |
-
-### API 목록 조회
-```bash
-./build/kassemblycodegen list --method simple
-```
+| `--create-dir` | true | 출력 디렉토리가 없으면 생성 |
+| `--go-mod` | false | Go 출력 시 `go.mod` 생성 여부 |
+| `--include-endpoints` | (모두) | 지정한 endpoint만 생성 |
+| `--exclude-endpoints` | (없음) | 지정한 endpoint를 제외하고 생성 |
 
 ---
 
@@ -86,7 +81,7 @@ go build -o ./build/kassemblycodegen.exe .
 go build -o ./build/kassemblycodegen.exe .
 
 # 생성
-./build/kassemblycodegen generate -m go --package openassembly --output ./generated --create-dir
+./build/kassemblycodegen generate -m go --package openassembly --output ./generated --create-dir --go-mod
 
 # 생성된 코드는 ./generated 디렉토리에 위치
 ```
@@ -102,10 +97,10 @@ import (
 )
 
 func main() {
-  client := openassembly.NewOpenAssemblyClient("YOUR_API_KEY")
+  client := openassembly.NewClient("YOUR_API_KEY")
 
-  // 예: 생성된 Fetch{Service} 메서드 사용
-  resp, err := client.FetchAllBill(context.Background(), &openassembly.AllBillParams{})
+  // 예: 생성된 builder 메서드 사용
+  resp, err := client.NewOPENSRVAPIBuilder().Fetch(context.Background())
   if err != nil {
     log.Fatal(err)
   }
@@ -114,7 +109,7 @@ func main() {
 }
 ```
 
-> 참고: 서비스마다 메서드 이름은 `Fetch{Service}` 형태로 생성됩니다.
+> 참고: Go는 `NewClient()`와 endpoint별 `New{Endpoint}Builder()` 형태로 생성됩니다.
 
 ### Python 클라이언트 생성 및 사용
 ```bash
@@ -131,6 +126,8 @@ uv sync
 # 사용
 from openassemblyclient import Client
 client = Client(api_key="YOUR_API_KEY")
+
+# endpoint 모듈은 generated/endpoints 아래에 생성됩니다.
 ```
 
 ---

@@ -19,16 +19,16 @@ const (
 	OpenAssemblyBulkJsonURL = "https://open.assembly.go.kr/portal/data/sheet/downloadSheetData.do"
 )
 
-type {{.ClientName}} struct {
+type Client struct {
 	Key  string
 	Http *http.Client
 }
 
-func New{{.ClientName}}(key string) *{{.ClientName}} {
-    return &{{.ClientName}}{
-        Key:  key,
-        Http: &http.Client{},
-    }
+func NewClient(key string) *Client {
+	return &Client{
+		Key:  key,
+		Http: &http.Client{},
+	}
 }
 
 // Response is a generic struct that represents the response from the Open Assembly API.
@@ -42,16 +42,16 @@ type Response[T any] struct {
 }
 
 func fetchApi[T any](
-    ctx context.Context,
-    c *{{.ClientName}},
-    endpoint string,
-    params ApiParams,
+	ctx context.Context,
+	c *Client,
+	endpoint string,
+	params ApiParams,
 ) (Response[T], error) {
-    url := c.buildURL(endpoint, params)
-    body, err := c.fetchHTTP(ctx, url)
-    if err != nil {
-        return Response[T]{}, err
-    }
+	url := c.buildURL(endpoint, params)
+	body, err := c.fetchHTTP(ctx, url)
+	if err != nil {
+		return Response[T]{}, err
+	}
 
     var raw map[string]json.RawMessage
     if err := json.Unmarshal(body, &raw); err != nil {
@@ -94,7 +94,7 @@ func fetchApi[T any](
 }
     
 
-func (c *{{.ClientName}}) buildURL(endpoint string, paramStruct ApiParams) string {
+func (c *Client) buildURL(endpoint string, paramStruct ApiParams) string {
 	params := url.Values{}
 	params.Add("KEY", c.Key)
 	params.Add("Type", "json")
@@ -102,18 +102,18 @@ func (c *{{.ClientName}}) buildURL(endpoint string, paramStruct ApiParams) strin
 	return OpenAssemblyBaseURL + endpoint + "?" + params.Encode()
 }
 
-func (c *{{.ClientName}}) setCommonHeaders(req *http.Request) {
+func (c *Client) setCommonHeaders(req *http.Request) {
     {{- range $key, $value := .Header }}
     req.Header.Set("{{ $key }}", "{{ $value }}")
     {{- end }}
 }
 
-func (c *{{.ClientName}}) fetchHTTP(ctx context.Context, url string) ([]byte, error) {
-    req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-    if err != nil {
-        return nil, err
-    }
-    c.setCommonHeaders(req)
+func (c *Client) fetchHTTP(ctx context.Context, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	c.setCommonHeaders(req)
 
     resp, err := c.Http.Do(req)
     if err != nil {
@@ -134,7 +134,7 @@ func (c *{{.ClientName}}) fetchHTTP(ctx context.Context, url string) ([]byte, er
 
 func fetchBulkJson[T any](
 	ctx context.Context,
-	c *{{.ClientName}},
+	c *Client,
 	infId string,
 	infSeq string,
 	param any,

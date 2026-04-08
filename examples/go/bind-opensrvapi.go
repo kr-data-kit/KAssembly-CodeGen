@@ -205,7 +205,7 @@ func (b *OPENSRVAPIBuilder) FetchBulkJson(ctx context.Context) (Response[OPENSRV
 }
 
 // NewOPENSRVAPIBuilder creates a new OPENSRVAPIBuilder
-func (c *OpenAssemblyClient) NewOPENSRVAPIBuilder() *OPENSRVAPIBuilder {
+func (c *Client) NewOPENSRVAPIBuilder() *OPENSRVAPIBuilder {
     return &OPENSRVAPIBuilder{
         BaseAPIRequester: BaseAPIRequester[*OPENSRVAPIParams, OPENSRVAPI]{
             client: c,
