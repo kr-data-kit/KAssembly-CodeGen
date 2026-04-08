@@ -172,7 +172,7 @@ func (b *VCONFBUDGETCONFLISTBuilder) FetchBulkJson(ctx context.Context) (Respons
 }
 
 // NewVCONFBUDGETCONFLISTBuilder creates a new VCONFBUDGETCONFLISTBuilder
-func (c *OpenAssemblyClient) NewVCONFBUDGETCONFLISTBuilder() *VCONFBUDGETCONFLISTBuilder {
+func (c *Client) NewVCONFBUDGETCONFLISTBuilder() *VCONFBUDGETCONFLISTBuilder {
     return &VCONFBUDGETCONFLISTBuilder{
         BaseAPIRequester: BaseAPIRequester[*VCONFBUDGETCONFLISTParams, VCONFBUDGETCONFLIST]{
             client: c,

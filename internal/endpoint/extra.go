@@ -1,4 +1,4 @@
-package service
+package endpoint
 
 import (
 	"context"
@@ -31,6 +31,34 @@ const (
 	BILLRCPV2 string = "OOWY4R001216HX11537"
 )
 
+func newVersionedEndpoint(base *Endpoint, spec *ServiceSpec, id string, alterStructName string, titleSuffix string, url string, apiInfSeq string, dataInfSeq string) *Endpoint {
+	return &Endpoint{
+		ID:          id,
+		Title:       base.Title + titleSuffix,
+		Description: base.Description + " - Updated Version",
+		URL:         url,
+
+		StructName: getStructName(spec.ResponseKey),
+		AlterStructNames: []string{
+			alterStructName,
+		},
+
+		Endpoint:    spec.Endpoint,
+		ResponseKey: spec.ResponseKey,
+		Params:      spec.Variables,
+		Cols:        spec.Columns,
+
+		ProvidesAPI:  true,
+		APIInfSeq:    apiInfSeq,
+		ProvidesData: true,
+		DataInfSeq:   dataInfSeq,
+
+		CCL:                  base.CCL,
+		CommercialUseAllowed: base.CommercialUseAllowed,
+		AttributionRequired:  base.AttributionRequired,
+	}
+}
+
 // CheckAdditionalIDs checks if there are additional IDs for the given ID by fetching the query data page and extracting all IDs from the links on the page.
 // check `extra.go` for more details on why this function exists and how it is used.
 func CheckAdditionalIDs(ctx context.Context, id string) ([]string, error) {
@@ -56,40 +84,24 @@ func CheckAdditionalIDs(ctx context.Context, id string) ([]string, error) {
 	return additionalIDs, nil
 }
 
-func CheckExtra(ctx context.Context, service *Service) (*Service, error) {
-	switch service.ID {
+func CheckExtra(ctx context.Context, enp *Endpoint) (*Endpoint, error) {
+	switch enp.ID {
 	case ALLBILL2:
 		spec, err := FetchServiceSpec(ctx, ALLBILL, "2")
 		if err != nil {
 			return nil, err
 		}
 
-		return &Service{
-			ID:          ALLBILL,
-			Title:       service.Title + " (Version 1)",
-			Description: service.Description + " - Updated Version",
-			URL:         fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", ALLBILL),
-
-			StructName: getStructName(spec.ResponseKey),
-			AlterStructNames: []string{
-				ALLBILL,
-			},
-
-			Endpoint:    spec.Endpoint,
-			ResponseKey: spec.ResponseKey,
-
-			Params: spec.Variables,
-			Cols:   spec.Columns,
-
-			ProvidesAPI:  true,
-			APIInfSeq:    "2",
-			ProvidesData: true,
-			DataInfSeq:   "1",
-
-			CCL:                  service.CCL,
-			CommercialUseAllowed: service.CommercialUseAllowed,
-			AttributionRequired:  service.AttributionRequired,
-		}, nil
+		return newVersionedEndpoint(
+			enp,
+			spec,
+			ALLBILL,
+			ALLBILL,
+			" (Version 1)",
+			fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", ALLBILL),
+			"2",
+			"1",
+		), nil
 	case BILLRCPV2:
 
 		spec, err := FetchServiceSpec(ctx, BILLRCPV, "2")
@@ -97,32 +109,16 @@ func CheckExtra(ctx context.Context, service *Service) (*Service, error) {
 			return nil, err
 		}
 
-		return &Service{
-			ID:          BILLRCPV,
-			Title:       service.Title + " (Version 1)",
-			Description: service.Description + " - Updated Version",
-			URL:         fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", BILLRCPV),
-			StructName:  getStructName(spec.ResponseKey),
-
-			AlterStructNames: []string{
-				BILLRCPV,
-			},
-
-			Endpoint:    spec.Endpoint,
-			ResponseKey: spec.ResponseKey,
-
-			Params: spec.Variables,
-			Cols:   spec.Columns,
-
-			ProvidesAPI:  true,
-			APIInfSeq:    "2",
-			ProvidesData: true,
-			DataInfSeq:   "1",
-
-			CCL:                  service.CCL,
-			CommercialUseAllowed: service.CommercialUseAllowed,
-			AttributionRequired:  service.AttributionRequired,
-		}, nil
+		return newVersionedEndpoint(
+			enp,
+			spec,
+			BILLRCPV,
+			BILLRCPV,
+			" (Version 1)",
+			fmt.Sprintf("https://open.assembly.go.kr/portal/data/service/selectAPIServicePage.do/%s", BILLRCPV),
+			"2",
+			"1",
+		), nil
 	default:
 		return nil, nil
 	}

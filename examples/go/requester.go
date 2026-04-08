@@ -8,7 +8,7 @@ import (
 )
 
 type BaseAPIRequester[P ApiParams, R any] struct {
-	client *OpenAssemblyClient
+	client *Client
 	params P
 	apiResKey  string
 }

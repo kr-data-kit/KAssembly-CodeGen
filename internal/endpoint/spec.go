@@ -1,4 +1,4 @@
-package service
+package endpoint
 
 import (
 	"context"
