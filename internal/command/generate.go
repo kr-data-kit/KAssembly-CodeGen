@@ -106,7 +106,7 @@ func init() {
 	generateCmdFlags.StringVar(&packageName, "package", "openassemblyclient", "Package name for generated code")
 	generateCmdFlags.StringVar(&outputPath, "output", "./out", "Output path for generated code")
 	generateCmdFlags.BoolVar(&createDir, "create-dir", true, "Create output directory if it does not exist")
-	generateCmdFlags.BoolVar(&goMod, "go-mod", true, "Generate go.mod for Go output")
+	generateCmdFlags.BoolVar(&goMod, "go-mod", false, "Generate go.mod for Go output")
 	generateCmdFlags.StringSliceVar(&includeEndpoints, "include-endpoints", []string{}, "Include only specified endpoints (comma-separated response keys)")
 	generateCmdFlags.StringSliceVar(&excludeEndpoints, "exclude-endpoints", []string{}, "Exclude specified endpoints (comma-separated response keys)")
 }
