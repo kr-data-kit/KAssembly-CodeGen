@@ -19,8 +19,10 @@ func CreateTemplateSet(subFS fs.FS, lang string) *template.Template {
 			return err
 		}
 
-		// TODO: error handling
-		b, _ := fs.ReadFile(langFS, path)
+		b, err := fs.ReadFile(langFS, path)
+		if err != nil {
+			return fmt.Errorf("error while reading template %q: %w", path, err)
+		}
 		_, err = ts.New(path).Parse(string(b))
 		return err
 	})

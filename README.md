@@ -71,11 +71,6 @@ go build -o ./build/kassemblycodegen.exe .
 | `--include-endpoints` | (모두) | 지정한 endpoint만 생성 |
 | `--exclude-endpoints` | (없음) | 지정한 endpoint를 제외하고 생성 |
 
-### API 목록 조회
-```bash
-./build/kassemblycodegen list --method simple
-```
-
 ---
 
 ## 예제

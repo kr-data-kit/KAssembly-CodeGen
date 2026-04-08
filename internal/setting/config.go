@@ -1,14 +1,8 @@
 package setting
 
 type GlobalSetting struct {
-	Path           string
-	CreateDir      bool
-	EndpointFilter Filter
-}
-
-type Filter struct {
-	Include []string
-	Exclude []string
+	Path      string
+	CreateDir bool
 }
 
 type GoSetting struct {

@@ -69,10 +69,6 @@ Example:
 				GlobalSetting: setting.GlobalSetting{
 					Path:      outputPath,
 					CreateDir: createDir,
-					EndpointFilter: setting.Filter{
-						Include: includeEndpoints,
-						Exclude: excludeEndpoints,
-					},
 				},
 				PackageName: packageName,
 				IsMod:       goMod,
@@ -87,10 +83,6 @@ Example:
 				GlobalSetting: setting.GlobalSetting{
 					Path:      outputPath,
 					CreateDir: createDir,
-					EndpointFilter: setting.Filter{
-						Include: includeEndpoints,
-						Exclude: excludeEndpoints,
-					},
 				},
 				PackageName: packageName,
 			}

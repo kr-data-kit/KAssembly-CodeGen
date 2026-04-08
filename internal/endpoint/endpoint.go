@@ -197,7 +197,15 @@ func GenerateEndpoints(ctx context.Context, includeList, excludeList []string) (
 			enp.ProvidesData = dataProvides
 			enp.DataInfSeq = dataInfSeq
 
-			extra, _ := CheckExtra(ctx, enp)
+			extra, err := CheckExtra(ctx, enp)
+
+			if err != nil {
+				returnChan <- &GenerateResult{
+					Endpoint: nil,
+					Error:    fmt.Errorf("failed to fetch extra service spec for %s: %w", item.ID, err),
+				}
+				extra = nil
+			}
 
 			baseIncluded := hasRequestedMatch(item.ID, spec.ResponseKey, includeList, excludeList)
 			extraIncluded := shouldEmitExtra(baseIncluded, extra, includeList, excludeList)
