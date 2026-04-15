@@ -2,11 +2,9 @@
 
 - CCL 정확히 체크 해야함 (영리 사용 금지인 endpoint가 있음)
 
-- 패키지 이름이 가능한지 체크하는 절차 필요
+- tmpl : mcp 또는 cli로 사용할 수 있는 tmpl (go) 추가
 
-- 테스트 코드를 만들어야 함
-
-- mcp 또는 cli로 사용할 수 있는 tmpl (go) 추가
+- tmpl : python pip 에 올릴 수 있는 tmpl 추가 (또는 기존 모듈 수정하기)
 
 ## CLI
 

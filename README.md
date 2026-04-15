@@ -43,6 +43,7 @@ go build -o ./build/kassemblycodegen.exe .
   --package myauth \
   --output ./generated \
   --create-dir \
+  --yes \
   --go-mod
 ```
 
@@ -67,6 +68,7 @@ go build -o ./build/kassemblycodegen.exe .
 | `--package` | openassemblyclient | 패키지/모듈 이름 |
 | `--output` | ./out | 출력 디렉토리 |
 | `--create-dir` | true | 출력 디렉토리가 없으면 생성 |
+| `-y, --yes` | false | 확인 프롬프트를 건너뛰고 바로 생성 시작 |
 | `--go-mod` | false | Go 출력 시 `go.mod` 생성 여부 |
 | `--include-endpoints` | (모두) | 지정한 endpoint만 생성 |
 | `--exclude-endpoints` | (없음) | 지정한 endpoint를 제외하고 생성 |

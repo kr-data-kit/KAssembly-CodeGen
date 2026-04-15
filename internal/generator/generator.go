@@ -19,6 +19,10 @@ type Generator interface {
 	GenFinal() error
 }
 
+type EndpointSource interface {
+	Generate(ctx context.Context) (<-chan *endpoint.GenerateResult, error)
+}
+
 type GeneralConfig struct {
 	PackageName     string
 	OutPath         string
@@ -27,7 +31,7 @@ type GeneralConfig struct {
 	ExcludeEndpoint []string
 }
 
-func Generate(ctx context.Context, gen Generator, includeList, excludeList []string) error {
+func Generate(ctx context.Context, gen Generator, source EndpointSource) error {
 	err := gen.SetGlobalConfig()
 	if err != nil {
 		return fmt.Errorf("failed to set global config: %w", err)
@@ -38,9 +42,9 @@ func Generate(ctx context.Context, gen Generator, includeList, excludeList []str
 		return fmt.Errorf("failed to generate static files: %w", err)
 	}
 
-	endpoints, err := endpoint.GenerateEndpoints(ctx, includeList, excludeList)
+	endpoints, err := source.Generate(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to generate endpoints: %w", err)
+		return fmt.Errorf("failed to prepare endpoints: %w", err)
 	}
 
 	running := true
