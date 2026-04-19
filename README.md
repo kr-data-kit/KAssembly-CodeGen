@@ -43,6 +43,7 @@ go build -o ./build/kassemblycodegen.exe .
   --package myauth \
   --output ./generated \
   --create-dir \
+  --yes \
   --go-mod
 ```
 
@@ -67,9 +68,47 @@ go build -o ./build/kassemblycodegen.exe .
 | `--package` | openassemblyclient | 패키지/모듈 이름 |
 | `--output` | ./out | 출력 디렉토리 |
 | `--create-dir` | true | 출력 디렉토리가 없으면 생성 |
+| `-y, --yes` | false | 확인 프롬프트를 건너뛰고 바로 생성 시작 |
 | `--go-mod` | false | Go 출력 시 `go.mod` 생성 여부 |
 | `--include-endpoints` | (모두) | 지정한 endpoint만 생성 |
 | `--exclude-endpoints` | (없음) | 지정한 endpoint를 제외하고 생성 |
+
+> 참고: CI/파이프라인처럼 비대화형 stdin 환경에서는 확인 프롬프트 입력을 받을 수 없으므로 `--yes` 옵션 사용을 권장합니다.
+
+### API 목록 조회
+
+```bash
+# 기본: ResponseKey, Title 컬럼만 출력
+./build/kassemblycodegen list
+
+# 캐시 사용 비활성화 (라이브 조회)
+./build/kassemblycodegen list --cache=false
+
+# 추가 컬럼 출력 (id, request-args, result-args 조합 가능)
+./build/kassemblycodegen list --extra id,request-args
+./build/kassemblycodegen list --extra id,request-args,result-args
+```
+
+| 옵션 | 기본값 | 설명 |
+|------|--------|------|
+| `--cache` | true | 캐시 우선 사용, 캐시가 없으면 자동 갱신 |
+| `--extra` | "" | 추가 컬럼 지정 (`id`, `request-args`, `result-args`) |
+
+### API 상세 조회
+
+```bash
+# ResponseKey 기준 상세 정보 조회 (캐시 파일에서 조회)
+./build/kassemblycodegen api-info ALLBILLV2
+```
+
+`api-info`는 `kasm.cache`를 기준으로 동작합니다. 최신 데이터가 필요하면 먼저 `cache` 명령으로 갱신한 뒤 조회하세요.
+
+### 캐시 갱신
+
+```bash
+# 전체 API 메타데이터를 kasm.cache로 저장/갱신
+./build/kassemblycodegen cache
+```
 
 ---
 

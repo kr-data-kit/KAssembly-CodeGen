@@ -2,7 +2,9 @@ package command
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"kassemblycodegen/internal/generator"
 	gogen "kassemblycodegen/internal/generator/go"
 	pygen "kassemblycodegen/internal/generator/python"
@@ -18,6 +20,8 @@ var (
 	packageName      string
 	outputPath       string
 	createDir        bool
+	confirmYes       bool
+	useCache         bool
 	includeEndpoints []string
 	excludeEndpoints []string
 	goMod            bool
@@ -42,10 +46,32 @@ Example:
 			return fmt.Errorf("unsupported language: %s (supported: go, python)", language)
 		}
 
-		slog.Info("Generating code with the following parameters")
-		slog.Info("Generate parameters", "language", language, "package", packageName, "output", outputPath, "create_dir", createDir, "include_endpoints", includeEndpoints, "exclude_endpoints", excludeEndpoints, "go_mod", goMod)
+		if err := validatePackageName(language, packageName); err != nil {
+			return err
+		}
 
-		// TODO : add checking [y/n] before proceeding with code generation
+		fmt.Printf("%s\n", "┌──────────────────────────────────────────────────────────┐")
+		fmt.Printf("│ %-56s │\n", "Code Generation Configuration")
+		fmt.Printf("%s\n", "├──────────────────────────────────────────────────────────┤")
+		fmt.Printf("│ %-17s %-38s │\n", "Language:", language)
+		fmt.Printf("│ %-17s %-38s │\n", "Package Name:", packageName)
+		fmt.Printf("│ %-17s %-38s │\n", "Output Path:", outputPath)
+		fmt.Printf("│ %-17s %-38v │\n", "Create Directory:", createDir)
+		fmt.Printf("│ %-17s %-38v │\n", "Use Cache:", useCache)
+		fmt.Printf("│ %-17s %-38v │\n", "Go Mod:", goMod)
+		fmt.Printf("%s\n", "└──────────────────────────────────────────────────────────┘")
+
+		if !confirmYes {
+			confirmed, err := readGenerationConfirmation(os.Stdin, os.Stdout)
+			if err != nil {
+				return err
+			}
+			if !confirmed {
+				fmt.Println("Generation cancelled.")
+				return nil
+			}
+		}
+		fmt.Println("Starting generation...")
 
 		// check output directory existence (not creating directory here)
 		if _, err := os.Stat(outputPath); os.IsNotExist(err) {
@@ -63,6 +89,8 @@ Example:
 		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
+		source := newEndpointSource(useCache, includeEndpoints, excludeEndpoints)
+
 		switch language {
 		case "go":
 			set := setting.GoSetting{
@@ -74,7 +102,7 @@ Example:
 				IsMod:       goMod,
 			}
 			gen := gogen.NewClientGenerator(set)
-			err := generator.Generate(ctx, gen, includeEndpoints, excludeEndpoints)
+			err := generator.Generate(ctx, gen, source)
 			if err != nil {
 				return fmt.Errorf("Go code generation failed: %v", err)
 			}
@@ -87,7 +115,7 @@ Example:
 				PackageName: packageName,
 			}
 			gen := pygen.NewClientGenerator(set)
-			err := generator.Generate(ctx, gen, includeEndpoints, excludeEndpoints)
+			err := generator.Generate(ctx, gen, source)
 			if err != nil {
 				return fmt.Errorf("Python code generation failed: %v", err)
 			}
@@ -106,7 +134,23 @@ func init() {
 	generateCmdFlags.StringVar(&packageName, "package", "openassemblyclient", "Package name for generated code")
 	generateCmdFlags.StringVar(&outputPath, "output", "./out", "Output path for generated code")
 	generateCmdFlags.BoolVar(&createDir, "create-dir", true, "Create output directory if it does not exist")
+	generateCmdFlags.BoolVarP(&confirmYes, "yes", "y", false, "Skip the confirmation prompt and start generation immediately")
+	generateCmdFlags.BoolVar(&useCache, "cache", true, "Use endpoint cache when generating; automatically creates it if missing")
 	generateCmdFlags.BoolVar(&goMod, "go-mod", false, "Generate go.mod for Go output")
 	generateCmdFlags.StringSliceVar(&includeEndpoints, "include-endpoints", []string{}, "Include only specified endpoints (comma-separated response keys)")
 	generateCmdFlags.StringSliceVar(&excludeEndpoints, "exclude-endpoints", []string{}, "Exclude specified endpoints (comma-separated response keys)")
+}
+
+func readGenerationConfirmation(input io.Reader, output io.Writer) (bool, error) {
+	fmt.Fprint(output, "\nProceed with code generation? [y/N]: ")
+
+	var response string
+	if _, err := fmt.Fscanln(input, &response); err != nil {
+		if errors.Is(err, io.EOF) {
+			return false, fmt.Errorf("failed to read confirmation input: EOF (non-interactive stdin). use --yes in CI/pipelines")
+		}
+		return false, fmt.Errorf("failed to read confirmation input: %w", err)
+	}
+
+	return response == "y" || response == "Y", nil
 }
