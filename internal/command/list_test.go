@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"kassemblycodegen/internal/endpoint"
 	"kassemblycodegen/internal/generator"
@@ -13,6 +14,10 @@ import (
 type fakeEndpointSource struct {
 	results []*endpoint.GenerateResult
 	err     error
+}
+
+type drainingEndpointSource struct {
+	done chan struct{}
 }
 
 func (f fakeEndpointSource) Generate(ctx context.Context) (<-chan *endpoint.GenerateResult, error) {
@@ -25,6 +30,19 @@ func (f fakeEndpointSource) Generate(ctx context.Context) (<-chan *endpoint.Gene
 		resultChan <- result
 	}
 	close(resultChan)
+	return resultChan, nil
+}
+
+func (d drainingEndpointSource) Generate(ctx context.Context) (<-chan *endpoint.GenerateResult, error) {
+	resultChan := make(chan *endpoint.GenerateResult)
+	go func() {
+		defer close(d.done)
+		defer close(resultChan)
+
+		resultChan <- &endpoint.GenerateResult{Error: errors.New("boom")}
+		resultChan <- &endpoint.GenerateResult{Endpoint: &endpoint.Endpoint{ID: "A", ResponseKey: "A"}}
+	}()
+
 	return resultChan, nil
 }
 
@@ -78,6 +96,23 @@ func TestCollectEndpointsFromSourceReturnsSourceError(t *testing.T) {
 	_, err := collectEndpointsFromSource(context.Background(), source)
 	if err == nil {
 		t.Fatal("expected error from source")
+	}
+}
+
+func TestCollectEndpointsFromSourceDrainsOnResultError(t *testing.T) {
+	done := make(chan struct{})
+	source := drainingEndpointSource{done: done}
+
+	_, err := collectEndpointsFromSource(context.Background(), source)
+	if err == nil {
+		t.Fatal("expected error from result stream")
+	}
+
+	select {
+	case <-done:
+		// drained fully
+	case <-time.After(1 * time.Second):
+		t.Fatal("expected source goroutine to finish; channel likely not drained")
 	}
 }
 

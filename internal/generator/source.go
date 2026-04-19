@@ -34,7 +34,7 @@ func (s CachedEndpointSource) Generate(ctx context.Context) (<-chan *endpoint.Ge
 			return nil, fmt.Errorf("cache file not found: %s", s.CacheFile)
 		}
 
-		cache, err = endpoint.UpdateCache(ctx, s.CacheFile, s.IncludeList, s.ExcludeList)
+		cache, err = endpoint.UpdateCache(ctx, s.CacheFile)
 		if err != nil {
 			return nil, err
 		}

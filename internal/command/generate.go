@@ -2,7 +2,9 @@ package command
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"kassemblycodegen/internal/generator"
 	gogen "kassemblycodegen/internal/generator/go"
 	pygen "kassemblycodegen/internal/generator/python"
@@ -60,10 +62,11 @@ Example:
 		fmt.Printf("%s\n", "└──────────────────────────────────────────────────────────┘")
 
 		if !confirmYes {
-			fmt.Print("\nProceed with code generation? [y/N]: ")
-			var response string
-			fmt.Scanln(&response)
-			if response != "y" && response != "Y" {
+			confirmed, err := readGenerationConfirmation(os.Stdin, os.Stdout)
+			if err != nil {
+				return err
+			}
+			if !confirmed {
 				fmt.Println("Generation cancelled.")
 				return nil
 			}
@@ -136,4 +139,18 @@ func init() {
 	generateCmdFlags.BoolVar(&goMod, "go-mod", false, "Generate go.mod for Go output")
 	generateCmdFlags.StringSliceVar(&includeEndpoints, "include-endpoints", []string{}, "Include only specified endpoints (comma-separated response keys)")
 	generateCmdFlags.StringSliceVar(&excludeEndpoints, "exclude-endpoints", []string{}, "Exclude specified endpoints (comma-separated response keys)")
+}
+
+func readGenerationConfirmation(input io.Reader, output io.Writer) (bool, error) {
+	fmt.Fprint(output, "\nProceed with code generation? [y/N]: ")
+
+	var response string
+	if _, err := fmt.Fscanln(input, &response); err != nil {
+		if errors.Is(err, io.EOF) {
+			return false, fmt.Errorf("failed to read confirmation input: EOF (non-interactive stdin). use --yes in CI/pipelines")
+		}
+		return false, fmt.Errorf("failed to read confirmation input: %w", err)
+	}
+
+	return response == "y" || response == "Y", nil
 }

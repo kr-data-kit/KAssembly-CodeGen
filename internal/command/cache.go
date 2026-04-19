@@ -19,7 +19,7 @@ The cache is written to kasm.cache in the current working directory.`,
 		defer cancel()
 
 		slog.Info("Starting cache command", "file", endpoint.CacheFileName)
-		cache, err := endpoint.UpdateCache(ctx, endpoint.CacheFileName, nil, nil)
+		cache, err := endpoint.UpdateCache(ctx, endpoint.CacheFileName)
 		if err != nil {
 			return err
 		}

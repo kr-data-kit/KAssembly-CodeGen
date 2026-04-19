@@ -89,7 +89,7 @@ func SaveCache(filePath string, cache *Cache) error {
 	return nil
 }
 
-func UpdateCache(ctx context.Context, filePath string, includeList, excludeList []string) (*Cache, error) {
+func UpdateCache(ctx context.Context, filePath string) (*Cache, error) {
 	slog.Info("Updating cache", "file", filePath)
 
 	currentCache, err := LoadCache(filePath)
@@ -103,7 +103,7 @@ func UpdateCache(ctx context.Context, filePath string, includeList, excludeList 
 		slog.Debug("Merging existing cache entries", "file", filePath, "services", len(currentCache.Services))
 	}
 
-	services, err := collectEndpoints(ctx, includeList, excludeList)
+	services, err := collectEndpoints(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -118,13 +118,13 @@ func UpdateCache(ctx context.Context, filePath string, includeList, excludeList 
 	return currentCache, nil
 }
 
-func collectEndpoints(ctx context.Context, includeList, excludeList []string) ([]*Endpoint, error) {
+func collectEndpoints(ctx context.Context) ([]*Endpoint, error) {
 	slog.Debug("Collecting endpoints for cache update")
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	results, err := GenerateEndpoints(ctx, includeList, excludeList)
+	results, err := GenerateEndpoints(ctx, nil, nil)
 	if err != nil {
 		return nil, err
 	}

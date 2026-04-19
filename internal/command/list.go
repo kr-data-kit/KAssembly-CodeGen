@@ -85,8 +85,10 @@ The command can use the local kasm.cache file or refresh it automatically when n
 			fmt.Fprintln(writer, strings.Join(row, "\t"))
 		}
 
-		_ = writer.Flush()
-
+		if err := writer.Flush(); err != nil {
+			return fmt.Errorf("failed to flush API list output: %w", err)
+		}
+		
 		slog.Info("API list completed", "services", len(services))
 		return nil
 	},

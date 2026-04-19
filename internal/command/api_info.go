@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var apiInfoUseCache bool
-
 var apiInfoCmd = &cobra.Command{
 	Use:   "api-info <ResponseKey>",
 	Short: "Show detailed OpenAssembly API information",
@@ -27,11 +25,7 @@ This command reads from kasm.cache only and will not refresh cache data automati
 		defer cancel()
 
 		responseKey := args[0]
-		slog.Info("Starting API info command", "responseKey", responseKey, "cache", apiInfoUseCache)
-
-		if !apiInfoUseCache {
-			return fmt.Errorf("api-info requires cache mode; enable --cache")
-		}
+		slog.Info("Starting API info command", "responseKey", responseKey)
 
 		source := newCachedEndpointSource(nil, nil, false)
 		services, err := collectEndpointsFromSource(ctx, source)
@@ -65,7 +59,6 @@ This command reads from kasm.cache only and will not refresh cache data automati
 
 func init() {
 	rootCmd.AddCommand(apiInfoCmd)
-	apiInfoCmd.Flags().BoolVar(&apiInfoUseCache, "cache", true, "Read API info from cache only")
 }
 
 func filterEndpointsByResponseKey(services []*endpoint.Endpoint, responseKey string) []*endpoint.Endpoint {
@@ -102,9 +95,15 @@ func printAPIInfoCard(service *endpoint.Endpoint) {
 
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	for _, row := range rows {
-		fmt.Fprintf(writer, "%s\t%s\n", row[0], row[1])
+		if _, err := fmt.Fprintf(writer, "%s\t%s\n", row[0], row[1]); err != nil {
+			slog.Error("failed to write API info row", "response_key", service.ResponseKey, "field", row[0], "error", err)
+			return
+		}
 	}
-	_ = writer.Flush()
+	if err := writer.Flush(); err != nil {
+		slog.Error("failed to flush API info output", "response_key", service.ResponseKey, "error", err)
+		return
+	}
 
 	fmt.Println("--------------------------------------------------------------------------------")
 }

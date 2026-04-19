@@ -34,14 +34,25 @@ func collectEndpointsFromSource(ctx context.Context, source generator.EndpointSo
 	}
 
 	services := make([]*endpoint.Endpoint, 0)
+	var firstErr error
 	for result := range results {
+		if result == nil {
+			continue
+		}
 		if result.Error != nil {
-			return nil, result.Error
+			if firstErr == nil {
+				firstErr = result.Error
+			}
+			continue
 		}
 		if result.Endpoint == nil {
 			continue
 		}
 		services = append(services, result.Endpoint)
+	}
+
+	if firstErr != nil {
+		return nil, firstErr
 	}
 
 	return services, nil
