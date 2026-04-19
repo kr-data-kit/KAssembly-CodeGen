@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"kassemblycodegen/internal/endpoint"
@@ -77,5 +78,32 @@ func TestCollectEndpointsFromSourceReturnsSourceError(t *testing.T) {
 	_, err := collectEndpointsFromSource(context.Background(), source)
 	if err == nil {
 		t.Fatal("expected error from source")
+	}
+}
+
+func TestParseListExtraFields(t *testing.T) {
+	config, err := parseListExtraFields("id, request-args, result-args")
+	if err != nil {
+		t.Fatalf("parseListExtraFields() error = %v", err)
+	}
+
+	if !config.showID {
+		t.Fatal("expected showID to be true")
+	}
+	if !config.showRequestArgs {
+		t.Fatal("expected showRequestArgs to be true")
+	}
+	if !config.showResultArgs {
+		t.Fatal("expected showResultArgs to be true")
+	}
+}
+
+func TestParseListExtraFieldsRejectsInvalid(t *testing.T) {
+	_, err := parseListExtraFields("id,unknown")
+	if err == nil {
+		t.Fatal("expected error for invalid value")
+	}
+	if !strings.Contains(err.Error(), "invalid --extra value") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

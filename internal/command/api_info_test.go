@@ -44,7 +44,7 @@ func TestPrintAPIInfoCard(t *testing.T) {
 		printAPIInfoCard(service)
 	})
 
-	for _, expected := range []string{"API Information", "Response Key: TESTKEY", "Title: Test Title", "Request Args: AGE(나이)", "Result Args: BILL_ID(의안ID)"} {
+	for _, expected := range []string{"API Information", "Response Key", "TESTKEY", "Title", "Test Title", "Request Args", "AGE(나이)", "Result Args", "BILL_ID(의안ID)"} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf("expected output to contain %q, got:\n%s", expected, output)
 		}

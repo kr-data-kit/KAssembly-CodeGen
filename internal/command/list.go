@@ -4,12 +4,22 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"sort"
+	"strings"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 )
 
 var listUseCache bool
+var listExtraFields string
+
+type listExtraConfig struct {
+	showID          bool
+	showRequestArgs bool
+	showResultArgs  bool
+}
 
 var listCmd = &cobra.Command{
 	Use:   "list",
@@ -23,6 +33,11 @@ The command can use the local kasm.cache file or refresh it automatically when n
 
 		slog.Info("Starting API list command", "cache", listUseCache)
 
+		extraConfig, err := parseListExtraFields(listExtraFields)
+		if err != nil {
+			return err
+		}
+
 		source := newEndpointSource(listUseCache, nil, nil)
 		services, err := collectEndpointsFromSource(ctx, source)
 		if err != nil {
@@ -33,19 +48,45 @@ The command can use the local kasm.cache file or refresh it automatically when n
 			return services[i].ResponseKey < services[j].ResponseKey
 		})
 
-		fmt.Println("--------------------------------------------------------------------------------")
-		fmt.Printf("Available APIs (%d)\n", len(services))
-		fmt.Println("--------------------------------------------------------------------------------")
-		fmt.Printf("%-28s %-56s\n", "ResponseKey", "Title")
-		fmt.Println("--------------------------------------------------------------------------------")
-
-		for _, service := range services {
-			responseKey := truncateText(service.ResponseKey, 28)
-			title := truncateText(service.Title, 56)
-			fmt.Printf("%-28s %-56s\n", responseKey, title)
+		headers := []string{"ResponseKey", "Title"}
+		separators := []string{"-----------", "-----"}
+		if extraConfig.showID {
+			headers = append(headers, "ID")
+			separators = append(separators, "--")
+		}
+		if extraConfig.showRequestArgs {
+			headers = append(headers, "RequestArgs")
+			separators = append(separators, "-----------")
+		}
+		if extraConfig.showResultArgs {
+			headers = append(headers, "ResultArgs")
+			separators = append(separators, "----------")
 		}
 
-		fmt.Println("--------------------------------------------------------------------------------")
+		writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		fmt.Fprintln(writer, strings.Join(headers, "\t"))
+		fmt.Fprintln(writer, strings.Join(separators, "\t"))
+
+		for _, service := range services {
+			row := []string{
+				service.ResponseKey,
+				truncateText(service.Title, 40),
+			}
+			if extraConfig.showID {
+				row = append(row, truncateText(service.ID, 20))
+			}
+			if extraConfig.showRequestArgs {
+				row = append(row, truncateText(formatRequestArgs(service.Params), 90))
+			}
+			if extraConfig.showResultArgs {
+				row = append(row, truncateText(formatResultArgs(service.Cols), 90))
+			}
+
+			fmt.Fprintln(writer, strings.Join(row, "\t"))
+		}
+
+		_ = writer.Flush()
+
 		slog.Info("API list completed", "services", len(services))
 		return nil
 	},
@@ -54,6 +95,34 @@ The command can use the local kasm.cache file or refresh it automatically when n
 func init() {
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().BoolVar(&listUseCache, "cache", true, "Use endpoint cache when listing APIs; automatically creates it if missing")
+	listCmd.Flags().StringVar(&listExtraFields, "extra", "", "Additional columns: id, request-args, result-args (comma-separated)")
+}
+
+func parseListExtraFields(raw string) (listExtraConfig, error) {
+	config := listExtraConfig{}
+	if strings.TrimSpace(raw) == "" {
+		return config, nil
+	}
+
+	for _, field := range strings.Split(raw, ",") {
+		normalized := strings.TrimSpace(strings.ToLower(field))
+		if normalized == "" {
+			continue
+		}
+
+		switch normalized {
+		case "id":
+			config.showID = true
+		case "request-args":
+			config.showRequestArgs = true
+		case "result-args":
+			config.showResultArgs = true
+		default:
+			return listExtraConfig{}, fmt.Errorf("invalid --extra value %q (allowed: id, request-args, result-args)", normalized)
+		}
+	}
+
+	return config, nil
 }
 
 func truncateText(value string, limit int) string {

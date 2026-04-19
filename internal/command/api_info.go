@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"kassemblycodegen/internal/endpoint"
 	"log/slog"
+	"os"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 )
@@ -80,33 +82,30 @@ func filterEndpointsByResponseKey(services []*endpoint.Endpoint, responseKey str
 }
 
 func printAPIInfoCard(service *endpoint.Endpoint) {
-	lines := []string{
-		fmt.Sprintf("Response Key: %s", service.ResponseKey),
-		fmt.Sprintf("Title: %s", service.Title),
-		fmt.Sprintf("ID: %s", service.ID),
-		fmt.Sprintf("URL: %s", service.URL),
-		fmt.Sprintf("Description: %s", service.Description),
-		fmt.Sprintf("Request Args: %s", formatRequestArgs(service.Params)),
-		fmt.Sprintf("Result Args: %s", formatResultArgs(service.Cols)),
-		fmt.Sprintf("Provides API: %t", service.ProvidesAPI),
-		fmt.Sprintf("Provides Data: %t", service.ProvidesData),
-		fmt.Sprintf("Commercial Use Allowed: %t", service.CommercialUseAllowed),
-		fmt.Sprintf("Attribution Required: %t", service.AttributionRequired),
-	}
-
-	maxWidth := len("API Information")
-	for _, line := range lines {
-		if len(line) > maxWidth {
-			maxWidth = len(line)
-		}
+	rows := [][2]string{
+		{"Response Key", service.ResponseKey},
+		{"Title", service.Title},
+		{"ID", service.ID},
+		{"URL", service.URL},
+		{"Description", service.Description},
+		{"Request Args", formatRequestArgs(service.Params)},
+		{"Result Args", formatResultArgs(service.Cols)},
+		{"Provides API", fmt.Sprintf("%t", service.ProvidesAPI)},
+		{"Provides Data", fmt.Sprintf("%t", service.ProvidesData)},
+		{"Commercial Use Allowed", fmt.Sprintf("%t", service.CommercialUseAllowed)},
+		{"Attribution Required", fmt.Sprintf("%t", service.AttributionRequired)},
 	}
 
 	fmt.Println("--------------------------------------------------------------------------------")
 	fmt.Println("API Information")
 	fmt.Println("--------------------------------------------------------------------------------")
-	for _, line := range lines {
-		fmt.Println(line)
+
+	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	for _, row := range rows {
+		fmt.Fprintf(writer, "%s\t%s\n", row[0], row[1])
 	}
+	_ = writer.Flush()
+
 	fmt.Println("--------------------------------------------------------------------------------")
 }
 
